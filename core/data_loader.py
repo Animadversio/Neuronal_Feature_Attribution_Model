@@ -1,7 +1,6 @@
 """
-Newer API for data loading for Evolution, Manifold dataset.
+Functional API for data loading for Evolution, Manifold dataset.
 Using the already formulated EStats and MStats structs from .mat files.
-
 for older one loading from full exp record see load_neural_data.
 """
 import os
@@ -159,6 +158,7 @@ def load_score_mat(EStats, MStats, Expi, ExpType, wdws=[(50,200)], stimdrive="N"
         elif ExpType == "Pasu_sgtr":  # return collection of scores
             return scorecol, imgfullpath_vect
 
+
 def test_load_score_mat(DRIVE="S"):
     """Test all files (esp. image stimuli are loadable.)"""
     missing_fns = []
@@ -185,14 +185,8 @@ def test_load_score_mat(DRIVE="S"):
                                                         stimdrive=DRIVE)
             record_missing(imgfullpath_vect)
     assert len(missing_fns) == 0, "Check the missing stimuli. data loading not fully successful"
-# ui = EStats[Expi - 1].evol.unit_in_pref_chan # unit id in the pref chan
-# psth = MStats[Expi-1].manif.psth.reshape(-1)
-# if psth[0].ndim == 3:
-#     nunit = psth[0].shape[0]
-# else:
-#     nunit = 1
-# psthlist = list(np.reshape(P, [nunit, 200, -1]) for P in psth)
-# scorecol = [np.mean(P[ui-1, 50:200, :],axis=0).astype(np.float) for P in psthlist]
+
+
 if __name__ == "__main__":
     from shutil import copyfile
     DRIVE = "S"
