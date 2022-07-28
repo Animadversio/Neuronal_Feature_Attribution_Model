@@ -18,8 +18,6 @@ from collections import defaultdict
 import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
-# from NN_PC_visualize.NN_PC_lib import \
-#     create_imagenet_valid_dataset, Dataset, DataLoader
 
 denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
                          std=[1/0.229, 1/0.224, 1/0.225])
@@ -29,8 +27,7 @@ resizer = Resize(227, )
 import torch
 from tqdm import tqdm
 from layer_hook_utils import featureFetcher
-from torch.utils.data import Dataset, DataLoader
-from dataset_utils import ImagePathDataset, DataLoader
+from core.dataset_utils import ImagePathDataset, Dataset, DataLoader
 from copy import deepcopy
 
 def calc_features(score_vect, imgfullpath_vect, net, featlayer,
