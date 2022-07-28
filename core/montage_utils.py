@@ -1,6 +1,9 @@
 import numpy as np
 from skimage.transform import resize
 import matplotlib.pylab as plt
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 
 def build_montages(image_list, image_shape, montage_shape, transpose=True):
@@ -83,9 +86,15 @@ def build_montages(image_list, image_shape, montage_shape, transpose=True):
         image_montages.append(montage_image)  # add unfinished montage
     return image_montages
 
-#%% Inspired from MakeGrid in torchvision.utils
-def make_grid_np(img_arr, nrow=8, padding=2, pad_value=0):
-    """img_arr is a 4 dim np array consist of N images of the same sizes"""
+
+def make_grid_np(img_arr, nrow=8, padding=2, pad_value=0, rowfirst=True):
+    """ Inspired from make_grid in torchvision.utils"""
+    if type(img_arr) is list:
+        try:
+            img_tsr = np.stack(tuple(img_arr), axis=3)
+            img_arr = img_tsr
+        except ValueError:
+            raise ValueError("img_arr is a list and its elements do not have the same shape as each other.")
     nmaps = img_arr.shape[3]
     xmaps = min(nrow, nmaps)
     ymaps = int(np.ceil(float(nmaps) / xmaps))
@@ -93,15 +102,23 @@ def make_grid_np(img_arr, nrow=8, padding=2, pad_value=0):
     grid = np.zeros((height * ymaps + padding, width * xmaps + padding, 3), dtype=img_arr.dtype)
     grid.fill(pad_value)
     k = 0
-    for y in range(ymaps):
+    if rowfirst:
+        for y in range(ymaps):
+            for x in range(xmaps):
+                if k >= nmaps:
+                    break
+                grid[y * height + padding: (y + 1) * height, x * width + padding: (x + 1) * width, :] = img_arr[:,:,:,k]
+                k = k + 1
+    else:
         for x in range(xmaps):
-            if k >= nmaps:
-                break
-            grid[y * height + padding: (y + 1) * height, x * width + padding: (x + 1) * width, :] = img_arr[:,:,:,k]
-            k = k + 1
+            for y in range(ymaps):
+                if k >= nmaps:
+                    break
+                grid[y * height + padding: (y + 1) * height, x * width + padding: (x + 1) * width, :] = img_arr[:,:,:,k]
+                k = k + 1
     return grid
 
-#%%
+
 def color_frame(img, color, pad=10):
     outimg = np.ones((img.shape[0] + pad * 2, img.shape[1] + pad * 2, 3))
     outimg = outimg * color[:3]
@@ -148,3 +165,16 @@ def color_framed_montages(image_list, image_shape, montage_shape, scores, cmap=p
     if start_new_img is False:
         image_montages.append(montage_image)  # add unfinished montage
     return image_montages
+
+
+def crop_from_montage(img, imgid:tuple =(0,0), imgsize=256, pad=2):
+    nrow, ncol = (img.shape[0] - pad) // (imgsize + pad), (img.shape[1] - pad) // (imgsize + pad)
+    if imgid == "rand":  imgid = np.random.randint(nrow * ncol)
+    elif type(imgid) is tuple:
+        ri, ci = imgid
+    elif imgid < 0:
+        imgid = nrow * ncol + imgid
+        ri, ci = np.unravel_index(imgid, (nrow, ncol))
+    img_crop = img[pad + (pad+imgsize)*ri:pad + imgsize + (pad+imgsize)*ri, \
+                   pad + (pad+imgsize)*ci:pad + imgsize + (pad+imgsize)*ci, :]
+    return img_crop

@@ -258,7 +258,7 @@ maxidxtab.groupby("layer2").agg(["mean", 'sem', 'count'])
 """
 Plot the prototype of the best performing regression model in montage
 """
-from build_montages import make_grid_np, crop_from_montage
+from core.montage_utils import make_grid_np, crop_from_montage
 def row2filename(row):
     return f"{row.Animal}-Exp{row.Expi:02d}-{row.layer}-{row.FeatRed}-{row.regressor}_vis.png"
 

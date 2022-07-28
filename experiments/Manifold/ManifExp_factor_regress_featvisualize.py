@@ -10,21 +10,22 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
-from featvis_lib import load_featnet
+from core.featvis_lib import load_featnet
+from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 import pickle as pkl
 from os.path import join
 import numpy as np
 import torch
-from neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
+from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
-from GAN_utils import upconvGAN
+from core.GAN_utils import upconvGAN
 from layer_hook_utils import featureFetcher
 import torch.nn.functional as F
 from torch.optim import Adam
 from torch_utils import show_imgrid, save_imgrid
-from featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
+
 
 def load_covtsrs(Animal, Expi, layer, ):
     data = np.load(join(fr"S:\corrFeatTsr\{Animal}_Exp{Expi:d}_Evol_nobdr_res-robust_corrTsr.npz"), allow_pickle=True)
