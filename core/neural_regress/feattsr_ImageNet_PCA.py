@@ -2,12 +2,12 @@
 Use ImageNet validation set to obtain features to train PCA and sparse random projection.
 Then use PCA and sparse random projection to do neuron prediction.
 """
-
-from NN_PC_visualize.NN_PC_lib import \
-    create_imagenet_valid_dataset, Dataset, DataLoader
+from torch.utils.data import Subset, SubsetRandomSampler
+from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
 from core.neural_regress.regress_lib import calc_features, calc_reduce_features, featureFetcher, tqdm, torch, np
 from core.featvis_lib import load_featnet
-from torch.utils.data import Subset, SubsetRandomSampler
+
+
 def calc_features_in_dataset(dataset, net, featlayer, idx_range=None,
                   batch_size=40, workers=6, ):
     """
