@@ -2,35 +2,35 @@ import os
 import pickle as pkl
 from os.path import join
 
+import matplotlib as mpl
 import matplotlib.pylab as plt
 import torch
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
-import matplotlib
 import seaborn as sns
 from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
 from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
 
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
-print(matplotlib.get_backend())
-matplotlib.use('Agg')
+print(mpl.get_backend())
+mpl.use('Agg')
 # matplotlib.use('module://backend_interagg')
+#%%
+saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
+outdir = join(saveroot, r"summary\weight_vis")
+tsrshapes = {'.layer2.Bottleneck3':(512, 29, 29),
+            '.layer3.Bottleneck5':(1024, 15, 15),
+            '.layer4.Bottleneck2':(2048, 8, 8)}
 #%%
 featlayer = '.layer3.Bottleneck5'
 data = pkl.load(open(join(saveroot, f"{featlayer}_regress_Xtransforms.pkl"), "rb"))
 srp = data["srp"]
 pca = data["pca"]
-#%%
-saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
-outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_vis"
-tsrshapes = {'.layer2.Bottleneck3':(512, 29, 29),
-            '.layer3.Bottleneck5':(1024, 15, 15),
-            '.layer4.Bottleneck2':(2048, 8, 8)}
 #%%
 plot_each_method = False
 for featlayer in ['.layer2.Bottleneck3', '.layer3.Bottleneck5', '.layer4.Bottleneck2']:

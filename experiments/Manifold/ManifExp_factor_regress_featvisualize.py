@@ -127,7 +127,7 @@ for Animal in ["Alfa", "Beto"]:
                           f"{Animal}-Exp{Expi:02d}-{featlayer}-{Xtype}-{regressor}_vis.png"))
 
 #%%
-"""Summarize the results into a montage acrsoo methods"""
+"""Summarize the results into a montage across methods"""
 from core.montage_utils import crop_from_montage, make_grid_np
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 perexproot = join(saveroot, "summary", "per_experiment")

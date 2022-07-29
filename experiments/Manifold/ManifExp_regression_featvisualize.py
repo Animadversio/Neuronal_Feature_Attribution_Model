@@ -9,26 +9,24 @@ import os
 import pickle as pkl
 from os.path import join
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.optim import Adam
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
-from sklearn.random_projection import SparseRandomProjection
 
 from core.CNN_scorers import load_featnet
-from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
-    LinearRegression_torch, PLS_torch, SpatialAvg_torch
-
-saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
-#%%
+from core.plot_utils import save_imgrid
 from core.GAN_utils import upconvGAN
 from core.layer_hook_utils import featureFetcher
-from core.plot_utils import save_imgrid
 from core.montage_utils import crop_from_montage, make_grid_np
-import torch.nn.functional as F
-from torch.optim import Adam
+from core.neural_regress.sklearn_torchify_lib import \
+    LinearRegression_torch, PLS_torch, PCA_torch, SpatialAvg_torch, SRP_torch
+
+
+saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
 G = upconvGAN()
 G.eval().cuda()
@@ -124,132 +122,3 @@ for Animal in ["Alfa", "Beto"]:
 #              ('pca', 'Lasso'),
 #              ('pca', 'PLS'),
 # ]
-#%%
-if isinstance(clf, GridSearchCV):
-    """ Predict
-    return safe_sparse_dot(X, self.coef_.T, dense_output=True) + self.intercept_
-    """
-    weights = clf.best_estimator_.coef_
-    intercept = clf.best_estimator_.intercept_
-else:
-    """ Predict
-    X -= self.x_mean_
-    X /= self.x_std_
-    Ypred = np.dot(X, self.coef_)
-    return Ypred + self.y_mean_
-    """
-    weights = clf.coef_
-#%%
-""" PCA transform
-X = X - self.mean_
-X_transformed = np.dot(X, self.components_.T)
-"""
-Xtfmmat = torch.from_numpy(data["pca"].components_)
-#%%
-""" SRP transform
-X_new = safe_sparse_dot(X, self.components_.T, dense_output=self.dense_output)
-return X_new
-"""
-# https://gist.github.com/aesuli/319d71707a5ee96086aa2439b87d4e38
-matcoo = data["srp"].components_.tocoo()
-print('Mat srp', matcoo)
-Xtfmmat = torch.sparse.LongTensor(
-    torch.LongTensor([matcoo.row.tolist(), matcoo.col.tolist()]),
-    torch.LongTensor(matcoo.data.astype(np.int32)))
-
-#%% Define torch based modules to back propagate, moved to sklearn_torchify_lib
-from sklearn.linear_model._base import LinearModel
-from typing import Union
-class SRP_torch(torch.nn.Module):
-    def __init__(self, srp: SparseRandomProjection):
-        super(SRP_torch, self).__init__()
-        matcoo = srp.components_.tocoo()
-        self.components = torch.sparse.FloatTensor(
-            torch.LongTensor([matcoo.row.tolist(), matcoo.col.tolist()]),
-            torch.FloatTensor(matcoo.data.astype(np.float32)))
-
-    def forward(self, X):
-        return torch.sparse.mm(self.components, X.T).T
-
-
-class PCA_torch(torch.nn.Module):
-    def __init__(self, pca: PCA):
-        super(PCA_torch, self).__init__()
-        self.n_features = pca.n_features_in_
-        self.n_components = pca.n_components
-        self.mean = torch.from_numpy(pca.mean_)  # (n_features,)
-        self.components = torch.from_numpy(pca.components_)  # (n_components, n_features)
-
-    def forward(self, X):
-        X = X - self.mean
-        return torch.mm(X, self.components.T)
-
-
-class LinearRegression_torch(torch.nn.Module):
-    def __init__(self, linear_regression: Union[LinearModel, GridSearchCV]):
-        super(LinearRegression_torch, self).__init__()
-        if isinstance(linear_regression, GridSearchCV):
-            assert isinstance(linear_regression.estimator, LinearModel)
-            self.coef = torch.from_numpy(linear_regression.best_estimator_.coef_)
-            self.intercept = torch.tensor(linear_regression.best_estimator_.intercept_)
-        else:
-            self.coef = torch.from_numpy(linear_regression.coef_)
-            self.intercept = torch.tensor(linear_regression.intercept_)
-        if self.coef.ndim == 1:
-            self.coef = self.coef.unsqueeze(1)
-
-    def forward(self, X):
-        return torch.mm(X, self.coef) + self.intercept
-
-
-class PLS_torch(torch.nn.Module):
-    def __init__(self, pls: PLSRegression):
-        super(PLS_torch, self).__init__()
-        self.n_components = pls.n_components
-        self.n_features = pls.n_features_in_
-        self.coef = torch.from_numpy(pls.coef_)  # (n_components, n_features)
-        self.x_mean = torch.from_numpy(pls.x_mean_)  # (n_features,)
-        self.x_std = torch.from_numpy(pls.x_std_)  # (n_features,)
-        self.y_mean = torch.from_numpy(pls.y_mean_)  # (n_targets,)
-
-    def forward(self, X):
-        X = X - self.x_mean
-        X = X / self.x_std
-        Ypred = torch.mm(X, self.coef)
-        return Ypred + self.y_mean
-
-#%% Test torch modules have same results as sklearn
-X = np.random.rand(10, 1024)
-pls = regr_data[('sp_avg', 'PLS')]
-y_pred = pls.predict(X)
-pls_th = PLS_torch(pls)
-y_pred_th = pls_th(torch.from_numpy(X))
-assert torch.allclose(torch.from_numpy(y_pred), y_pred_th)
-#%%
-X = np.random.rand(10, 1024).astype(np.float32)
-reg = regr_data[('sp_avg', 'Lasso')]
-y_pred = reg.predict(X)
-reg_th = LinearRegression_torch(reg)
-y_pred_th = reg_th(torch.from_numpy(X))
-assert torch.allclose(torch.from_numpy(y_pred[:, np.newaxis]), y_pred_th)
-#%%
-X = np.random.rand(10, 1024).astype(np.float32)
-reg = regr_data[('sp_avg', 'Ridge')]
-y_pred = reg.predict(X)
-reg_th = LinearRegression_torch(reg)
-y_pred_th = reg_th(torch.from_numpy(X))
-assert torch.allclose(torch.from_numpy(y_pred[:, np.newaxis]), y_pred_th)
-#%% PCA
-X = np.random.rand(10, 230400).astype(np.float32)
-pca = data["pca"]
-pca_th = PCA_torch(pca)
-X_red = pca.transform(X)
-X_red_th = pca_th(torch.from_numpy(X))
-assert torch.allclose(torch.from_numpy(X_red), X_red_th)
-#%% SRP
-X = np.random.rand(10, 230400).astype(np.float32)
-srp = data["srp"]
-srp_th = SRP_torch(srp)
-X_red = srp.transform(X)
-X_red_th = srp_th(torch.from_numpy(X))
-assert torch.allclose(torch.from_numpy(X_red).float(), X_red_th, atol=1E-5)

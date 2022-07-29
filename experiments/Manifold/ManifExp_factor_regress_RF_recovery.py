@@ -9,10 +9,6 @@ import seaborn as sns
 from core.plot_utils import saveallforms
 from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
 
-mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
-# saveroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
-saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
-
 
 def load_covtsrs(Animal, Expi, layer, ):
     data = np.load(join(fr"S:\corrFeatTsr\{Animal}_Exp{Expi:d}_Evol_nobdr_res-robust_corrTsr.npz"), allow_pickle=True)
@@ -43,7 +39,8 @@ def load_NMF_factors(Animal, Expi, layer, NF=3):
 """
 Recovery using the weights tensor L2 norm abs of sum
 """
-fitroot = r'E:\OneDrive - Harvard University\Manifold_NeuralRegress'
+mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
+saveroot = r'E:\OneDrive - Harvard University\Manifold_NeuralRegress'
 outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_attrb_mask"
 
 layer_long = ".layer3.Bottleneck5"
@@ -56,7 +53,7 @@ for Animal in ["Alfa", "Beto"]:
         if Animal == "Beto" and Expi == 46:continue
         Hmat3, Hmaps3, ccfactor3, FactStat = load_NMF_factors(Animal, Expi, "layer3", NF=3)
         padded_mask3 = np.pad(Hmaps3[:, :, :], ((bdr, bdr), (bdr, bdr), (0, 0)), mode="constant")
-        expdir = join(fitroot, f"{Animal}_{Expi:02d}")
+        expdir = join(saveroot, f"{Animal}_{Expi:02d}")
         data = pkl.load(open(join(expdir, f"{layer_long}_factor-regress_models.pkl"), "rb"))
 
         mdl = data[model_tuple]

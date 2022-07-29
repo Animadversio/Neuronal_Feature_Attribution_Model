@@ -7,8 +7,11 @@ from os.path import join
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.io import loadmat
+from core.montage_utils import make_grid_np, crop_from_montage
 rootdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 sumdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary"
 figdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary"
@@ -129,7 +132,6 @@ plt.show()
 """
 Per experiment model comparison 
 """
-import matplotlib
 massproduce = True
 matplotlib.use("Agg" if massproduce else 'module://backend_interagg') #
 #%%
@@ -194,7 +196,6 @@ for Animal in ["Alfa", "Beto"]:
             plt.show()
 
 #%% Compare across the area / pref chan
-from scipy.io import loadmat
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 """
 Record the pref chan and area for each experiment
@@ -258,9 +259,9 @@ maxidxtab.groupby("layer2").agg(["mean", 'sem', 'count'])
 """
 Plot the prototype of the best performing regression model in montage
 """
-from core.montage_utils import make_grid_np, crop_from_montage
 def row2filename(row):
     return f"{row.Animal}-Exp{row.Expi:02d}-{row.layer}-{row.FeatRed}-{row.regressor}_vis.png"
+
 
 outdir = join(rootdir, "summary\per_exp_best")
 for Animal in ["Alfa", "Beto"]:

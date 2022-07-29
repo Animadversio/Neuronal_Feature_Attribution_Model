@@ -35,6 +35,9 @@ from sklearn.decomposition import PCA
 
 from core.CNN_scorers import load_featnet
 from core.neural_data_loader import load_score_mat
+from core.neural_regress.regress_lib import calc_features, \
+        calc_reduce_features, sweep_regressors, evaluate_prediction, \
+        merge_dict_arrays, merge_arrays, evaluate_dict
 
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
@@ -44,9 +47,6 @@ Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
 # os.makedirs(join(saveroot, "resnet50_linf8"), exist_ok=True)
 featnet, net = load_featnet("resnet50_linf8")
 #%% Import Prediction pipeline from libray
-from core.neural_regress.regress_lib import calc_features, \
-        calc_reduce_features, sweep_regressors, evaluate_prediction, \
-        merge_dict_arrays, merge_arrays, evaluate_dict
 
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%

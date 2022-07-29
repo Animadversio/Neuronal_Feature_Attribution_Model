@@ -16,30 +16,7 @@ from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, s
 from core.neural_data_loader import mat_path, loadmat
 from core.featvis_lib import rectify_tsr
 from core.CNN_scorers import load_featnet
-
-def showimg(ax, imgarr, cbar=False, ylabel=None, title=None, clim=None):
-    if clim is None:
-        pcm = ax.imshow(imgarr)
-    else:
-        pcm = ax.imshow(imgarr, vmin=clim[0], vmax=clim[1],)
-    ax.set_ylabel(ylabel)
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.set_title(title)
-    if cbar:
-        plt.colorbar(pcm, ax=ax)
-    return pcm
-
-
-def off_axes(axs):
-    for ax in axs:
-        ax.axis("off")
+from core.plot_utils import showimg, off_axes
 #%
 ReprStats_col = EasyDict()
 EStats_col = EasyDict()
@@ -290,9 +267,9 @@ for Animal, Expi in Explist[:]:
     figh.show()
 
 #%% Supplementary Figure S4O
+from core.GAN_utils import upconvGAN
 from core.featvis_lib import vis_feattsr, vis_feattsr_factor, vis_featvec_wmaps
 from core.CorrFeatFactor.CorrFeatTsr_predict_lib import visualize_fulltsrModel, visualize_factorModel
-from core.GAN_utils import upconvGAN
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
 #%
@@ -605,6 +582,7 @@ def pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_bef", colorvar="are
     plt.savefig(join(outdir, "models_pred_cmp_%s_%s_%s.pdf"%(varnm, explab1, explab2)))
     plt.show()
     return figh
+
 
 modelstr1 = "resnet50_linf8-layer3_Full_bdr1_Tthresh_3__nobdr_res-robust_CV"
 exptab1 = pd.read_csv(glob(join(modelroot, modelstr1, "*.csv"))[0])

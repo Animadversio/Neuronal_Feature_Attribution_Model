@@ -17,11 +17,11 @@ import matplotlib.pyplot as plt
 from os.path import join
 from scipy.io import loadmat
 import pickle as pkl
+from scipy.stats import spearmanr, pearsonr
 from core.CNN_scorers import load_featnet
 from core.neural_data_loader import load_score_mat
 from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset, score_images_torchdata
-from scipy.stats import spearmanr, pearsonr
 #%%
 def load_covtsrs(Animal, Expi, layer, ):
     data = np.load(join(fr"S:\corrFeatTsr\{Animal}_Exp{Expi:d}_Evol_nobdr_res-robust_corrTsr.npz"), allow_pickle=True)
@@ -233,55 +233,3 @@ for Animal in ["Alfa", "Beto"]:
             plt.show()
 #%%
 
-#%% Scratches
-layer = "layer3"
-netname = "resnet50_linf8"
-scorer = CorrFeatScore()
-scorer.register_hooks(net, layer, netname="resnet50_linf8")
-#%%
-figdir = r"E:\OneDrive - Harvard University\CNN_neural_regression\resnet50_linf8\CorrFeatTsr_predict"
-#%%
-DR_Wtsr = pad_factor_prod(Hmaps, ccfactor, bdr=bdr)
-scorer.register_weights({layer: DR_Wtsr})
-pred_score = score_images(featnet, scorer, layer, imgfullpath_vect, imgloader=loadimg_preprocess, batchsize=80,)
-scorer.clear_hook()
-nlfunc, popt, pcov, scaling, nlpred_score, Stat = fitnl_predscore(pred_score.numpy(), score_vect)
-#%%
-scorer = CorrFeatScore()
-scorer.register_hooks(net, layer, netname="resnet50_linf8")
-rank1_Wtsr = [pad_factor_prod(Hmaps[:, :, i:i+1], ccfactor[:, i:i+1], bdr=bdr) for i in range(3)]
-stack_Wtsr = np.stack(rank1_Wtsr, axis=0)
-scorer.register_weights({layer: stack_Wtsr})
-pred_score = score_images_torchdata(featnet, scorer, layer,
-                imgfullpath_vect, batchsize=80, workers=6)
-scorer.clear_hook()
-
-#%%
-nlfunc, popt, pcov, scaling, nlpred_score, Stat = fitnl_predscore(pred_score.numpy(), score_vect)
-#%%
-train_X, test_X, train_y, test_y \
-    = train_test_split(pred_score.numpy(), score_vect, test_size=0.2, random_state=42)
-clf = LinearRegression(normalize=True).fit(train_X, train_y, )
-D2_test = clf.score(test_X, test_y)  # 0.16728044321972735
-D2_train = clf.score(train_X, train_y)  # 0.16270582493435726
-print(f"Independent weights for three factors: Train {D2_train:.3f}, test {D2_test:.3f}")
-print(f"Factor weights {clf.coef_}")
-#%%
-clf = LinearRegression().fit(train_X.mean(axis=1, keepdims=True), train_y, )
-D2_test = clf.score(test_X.mean(axis=1, keepdims=True), test_y)  # 0.1532078264571166
-D2_train = clf.score(train_X.mean(axis=1, keepdims=True), train_y)  # 0.15515980956827935
-print(f"Merged three factors: Train {D2_train:.3f}, test {D2_test:.3f}")
-#%%
-
-#%%
-#%%
-# pred = train_test_split(pred_score.numpy(), score_vect, test_size=0.2, random_state=42)
-pred_train, pred_test, orig_train, orig_test = train_test_split(nlpred_score, score_vect, test_size=0.2, random_state=42)
-print()
-#%%
-Animal, Expi = "Alfa", 19
-featlayer = ".layer4.Bottleneck2"
-score_vect, imgfullpath_vect = load_score_mat(EStats, MStats, Expi, "Evol", wdws=[(50, 200)], stimdrive="N")
-feattsr = calc_features(score_vect, imgfullpath_vect, net, featlayer, workers=12, batch_size=64)
-# 4000 images, batch_size=64, workers=8 took ~19 sec.
-#%%

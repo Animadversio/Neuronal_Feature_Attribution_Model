@@ -1,20 +1,23 @@
 """ Functions of Using CorrFeatTsr Models (`CorrFeatScore`) to predict neural response """
-#% This Section contains functions that do predictions for the images.
-import torch
-import numpy as np
-from easydict import EasyDict
-from tqdm import tqdm
+# % This Section contains functions that do predictions for the images.
 from os.path import join
-import seaborn as sns
+
 import matplotlib as mpl
 import matplotlib.pylab as plt
+import numpy as np
+import seaborn as sns
+import torch
+from easydict import EasyDict
 from scipy.optimize import curve_fit
+from torchvision.transforms import ToTensor, Resize, Compose, \
+    Normalize, GaussianBlur
+from tqdm import tqdm
+
 from core.CorrFeatFactor.CorrFeatTsr_lib import loadimg_preprocess
-from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore
 from core.CorrFeatFactor.CorrFeatTsr_utils import multichan2rgb
+from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore
 from core.dataset_utils import ImagePathDataset, DataLoader
-from torchvision.transforms import ToPILImage, ToTensor, Resize, Compose, \
-            Normalize, GaussianBlur
+
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 def score_images(featNet, scorer, layername, imgfps, imgloader=loadimg_preprocess, batchsize=70,):

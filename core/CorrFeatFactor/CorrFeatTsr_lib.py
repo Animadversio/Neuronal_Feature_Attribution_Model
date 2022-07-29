@@ -10,15 +10,15 @@ Full pipeline
     Corr_Feat_pipeline: for given network, list of layers, list of pairs of input and output, do correlation feature analysis
 
 """
-from os.path import join
-import matplotlib.pylab as plt
-import torch
-import numpy as np
-from skimage.transform import resize
-from skimage.filters import gaussian
 from collections import defaultdict
-from scipy.stats import t
+from os.path import join
+
+import matplotlib.pylab as plt
+import numpy as np
+import torch
 from easydict import EasyDict
+from skimage.filters import gaussian
+from skimage.transform import resize
 from tqdm import tqdm
 
 #  New name array to match that of matlab
@@ -329,7 +329,7 @@ def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, Exp
 import torch.nn.functional as F
 from torchvision import transforms
 from skimage.io import imread
-from kornia.filters import median_blur, gaussian_blur2d
+from kornia.filters import gaussian_blur2d
 
 RGBmean = torch.tensor([0.485, 0.456, 0.406]).float().reshape([1,3,1,1])
 RGBstd = torch.tensor([0.229, 0.224, 0.225]).float().reshape([1,3,1,1])
