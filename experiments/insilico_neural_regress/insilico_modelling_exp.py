@@ -67,7 +67,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
 from torchvision.transforms import ToPILImage, ToTensor, Normalize, Resize
-from core.torch_utils import show_imgrid
+from core.plot_utils import show_imgrid
 from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
 
 denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],

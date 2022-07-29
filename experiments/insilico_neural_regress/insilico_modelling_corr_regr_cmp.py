@@ -147,7 +147,7 @@ targetunit = (10, 3, 3)
 #%%
 matplotlib.use("Agg") # 'module://backend_interagg'
 #%%
-from core.torch_utils import show_imgrid, save_imgrid
+from core.plot_utils import show_imgrid, save_imgrid
 from core.grad_RF_estim import GAN_grad_RF_estimate
 for (targetunit, targetlayer) in [
                                   # ((10, 9, 9), ".layer3.Bottleneck5"),

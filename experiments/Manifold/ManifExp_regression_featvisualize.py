@@ -28,7 +28,7 @@ saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
 from core.GAN_utils import upconvGAN
 from core.layer_hook_utils import featureFetcher
-from core.torch_utils import show_imgrid, save_imgrid
+from core.plot_utils import show_imgrid, save_imgrid
 from core.montage_utils import crop_from_montage, make_grid_np
 import torch.nn.functional as F
 from torch.optim import Adam

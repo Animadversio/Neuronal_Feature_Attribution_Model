@@ -24,7 +24,7 @@ from core.GAN_utils import upconvGAN
 from core.layer_hook_utils import featureFetcher
 import torch.nn.functional as F
 from torch.optim import Adam
-from core.torch_utils import show_imgrid, save_imgrid
+from core.plot_utils import show_imgrid, save_imgrid
 
 
 def load_covtsrs(Animal, Expi, layer, ):

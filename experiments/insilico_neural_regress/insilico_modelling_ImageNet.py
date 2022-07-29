@@ -36,7 +36,7 @@ Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], 
 Xfeat_transformer = {"sp_rf": lambda tsr: tsr[:, :, 6, 6].copy(),
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
 #%%
-from core.torch_utils import show_imgrid
+from core.plot_utils import show_imgrid
 from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
 
 dataset = create_imagenet_valid_dataset(imgpix=227, normalize=True)

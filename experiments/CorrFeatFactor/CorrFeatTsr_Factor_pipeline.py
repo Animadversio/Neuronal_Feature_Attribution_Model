@@ -21,10 +21,6 @@ import pandas as pd
 import seaborn as sns
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
-# os.system(r'subst N: E:\Network_Data_Sync') # do this if at home.
-os.system(r'subst S: E:\Network_Data_Sync')
-os.system(r'subst O: "E:\OneDrive - Washington University in St. Louis"')
-os.system(r"subst N: \\storage1.ris.wustl.edu\crponce\Active")
 
 def resample_correlation(scorecol, trial=100):
     """ Compute noise ceiling for correlating with a collection of noisy data"""

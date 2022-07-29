@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
 from torchvision.transforms import ToPILImage, ToTensor, Normalize, Resize
-from core.torch_utils import show_imgrid
+from core.plot_utils import show_imgrid
 import numpy as np
 import pandas as pd
 import pickle as pkl
