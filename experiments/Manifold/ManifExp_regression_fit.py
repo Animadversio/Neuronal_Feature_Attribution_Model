@@ -26,7 +26,7 @@ import pandas as pd
 import pickle as pkl
 import matplotlib.pylab as plt
 from scipy.io import loadmat
-from core.data_loader import load_score_mat
+from core.neural_data_loader import load_score_mat
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"

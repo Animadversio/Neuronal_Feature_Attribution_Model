@@ -13,7 +13,7 @@ from scipy.stats import ttest_rel
 from tqdm import tqdm
 
 from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
-from core.data_loader import mat_path, loadmat
+from core.neural_data_loader import mat_path, loadmat
 from core.featvis_lib import load_featnet, rectify_tsr
 
 

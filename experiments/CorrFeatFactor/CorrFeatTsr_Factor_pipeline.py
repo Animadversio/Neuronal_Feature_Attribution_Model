@@ -17,7 +17,7 @@ from easydict import EasyDict
 from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess
 from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
 from core.GAN_utils import upconvGAN
-from core.data_loader import mat_path, loadmat, load_score_mat
+from core.neural_data_loader import mat_path, loadmat, load_score_mat
 from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
     vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
     CorrFeatScore, show_img, pad_factor_prod
@@ -579,32 +579,7 @@ summarize_tab(tab)
 # predtab = pd.DataFrame(PredStat_col)
 # facttab = pd.DataFrame(FactStat_col)
 # tab = pd.concat((exptab, predtab, facttab), axis=1)
-#%% 
-
-
-#%% Test transform robustness to feature visualization. 
-from lucent.optvis.transform import random_rotate, jitter
-tfms = [
-    jitter(8),
-    # random_scale([1 + (i - 5) / 50.0 for i in range(11)]),
-    random_rotate(list(range(-10, 11)) + 5 * [0]),
-    jitter(4),
-]
 #%%
-saveDict = pkl.load(open(join(expdir,"Alfa_Exp03_factors.pkl"),'rb'))
-ccfactor = saveDict.ccfactor
-Hmaps = saveDict.Hmaps
-netname = saveDict.netname
-layer = saveDict.layer
-featvis_mode = saveDict.featvis_mode
-bdr = saveDict.bdr
-featnet, net = load_featnet(netname)
-tsrimgs, mtg, score_traj = vis_feattsr_factor(ccfactor, Hmaps, net, G, layer, netname=netname, tfms=tfms,#[],
-              score_mode=featvis_mode, featnet=featnet, Bsize=5, saveImgN=1, bdr=bdr, figdir=expdir, savestr="corr",
-              saveimg=False, imshow=True)
-
-
-
 # varnm = "cc_bef"; colorvar = "area"; stylevar = "Animal"
 # explab1 = "vgg16-conv4_3"; explab2 = "alexnet-conv3"#"vgg16-conv3_3"
 # tab1 = pd.read_csv(join(sumdir, "Both_pred_stats_vgg16-conv4_3_none_bdr1_NF3.csv"))

@@ -17,7 +17,7 @@ from torchvision.transforms import ToPILImage
 from core.CNN_scorers import load_featnet
 from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore, corr_GAN_visualize, corr_visualize, preprocess
 from core.GAN_utils import upconvGAN
-from core.data_loader import mat_path, loadmat
+from core.neural_data_loader import mat_path, loadmat
 
 mpl.rcParams['pdf.fonttype'] = 42
 
