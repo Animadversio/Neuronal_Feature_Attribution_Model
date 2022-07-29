@@ -1,3 +1,11 @@
+""" pre-trained GAN models for feature visualization
+Examples:
+    # Load a state dict
+    G = upconvGAN("fc6")
+    # Load a state dict from a pretrained model
+    G = upconvGAN("pool5")
+    G.G.load_state_dict(torch.hub.load_state_dict_from_url(r"https://drive.google.com/uc?export=download&id=1vB_tOoXL064v9D6AKwl0gTs1a7jo68y7",progress=True))
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -45,16 +53,18 @@ def load_statedict_from_online(name="fc6"):
     SD = torch.load(filepath)
     return SD
 
+
 class View(nn.Module):
     def __init__(self, *shape):
         super(View, self).__init__()
         self.shape = shape
-    def forward(self, input):
-        return input.view(*self.shape)
+
+    def forward(self, x):
+        return x.view(*self.shape)
+
 
 RGB_mean = torch.tensor([123.0, 117.0, 104.0])
 RGB_mean = torch.reshape(RGB_mean, (1, 3, 1, 1))
-
 class upconvGAN(nn.Module):
     def __init__(self, name="fc6", pretrained=True):
         super(upconvGAN, self).__init__()
@@ -163,7 +173,8 @@ class upconvGAN(nn.Module):
     def visualize(self, x, scale=1.0):
         raw = self.G(x)[:, [2, 1, 0], :, :]
         return torch.clamp(raw + RGB_mean.to(raw.device), 0, 255.0) / 255.0 * scale
-#%%
+
+
 class multiZupconvGAN(nn.Module):
     def __init__(self, blendlayer="conv5_1", name="fc6", pretrained=True):
         super(multiZupconvGAN, self).__init__()
@@ -184,89 +195,5 @@ class multiZupconvGAN(nn.Module):
     def visualize(self, codes, z_alpha, scale=1.0):
         raw = self.forward(codes, z_alpha)
         return torch.clamp(raw + RGB_mean.to(raw.device), 0, 255.0) / 255.0 * scale
-# # layer name translation
-# # "defc7.weight", "defc7.bias", "defc6.weight", "defc6.bias", "defc5.weight", "defc5.bias".
-# # "defc7.1.weight", "defc7.1.bias", "defc6.1.weight", "defc6.1.bias", "defc5.1.weight", "defc5.1.bias".
-# SD = G.state_dict()
-# SDnew = OrderedDict()
-# for name, W in SD.items():
-#     name = name.replace(".1.", ".")
-#     SDnew[name] = W
-# UCG.G.load_state_dict(SDnew)
 
-#%% The first time to run this you need these modules
-if __name__ == "__main__":
-    import sys
-    import matplotlib.pylab as plt
-    sys.path.append(r"E:\Github_Projects\Visual_Neuro_InSilico_Exp")
-    from torch_net_utils import load_generator, visualize
-    G = load_generator(GAN="fc6")
-    UCG = upconvGAN("fc6")
-    #%%
-    def test_consisitency(G, UCG):#_
-        code = torch.randn((1, UCG.codelen))
-        # network outputs are the same.
-        assert torch.allclose(UCG(code), G(code)['deconv0'][:, [2, 1, 0], :, :])
-        # visualization function is the same
-        imgnew = UCG.visualize(code).permute([2, 3, 1, 0]).squeeze()
-        imgorig = visualize(G, code.numpy(), mode="cpu")
-        assert torch.allclose(imgnew, imgorig)
-        plt.figure(figsize=[6,3])
-        plt.subplot(121)
-        plt.imshow(imgnew.detach())
-        plt.axis('off')
-        plt.subplot(122)
-        plt.imshow(imgorig.detach())
-        plt.axis('off')
-        plt.show()
-    test_consisitency(G, UCG)
-    #%%
-    G = load_generator(GAN="fc7")
-    UCG = upconvGAN("fc7")
-    test_consisitency(G, UCG)
-    #%%
-    # pool5 GAN
-    def test_FCconsisitency(G, UCG):#_
-        code = torch.randn((1, UCG.codelen, 6, 6))
-        # network outputs are the same.
-        assert torch.allclose(UCG(code), G(code)['generated'][:, [2, 1, 0], :, :])
-        # visualization function is the same
-        imgnew = UCG.visualize(code).permute([2, 3, 1, 0]).squeeze()
-        imgorig = G(code)['generated'][:, [2, 1, 0], :, :]
-        imgorig = torch.clamp(imgorig + RGB_mean, 0, 255.0) / 255.0
-        imgorig = imgorig.permute([2, 3, 1, 0]).squeeze()
-        # imgorig = visualize(G, code.numpy(), mode="cpu")
-        # assert torch.allclose(imgnew, imgorig)
-        plt.figure(figsize=[6,3])
-        plt.subplot(121)
-        plt.imshow(imgnew.detach())
-        plt.axis('off')
-        plt.subplot(122)
-        plt.imshow(imgorig.detach())
-        plt.axis('off')
-        plt.show()
-    G = load_generator(GAN="pool5")
-    UCG = upconvGAN("pool5")
-    test_FCconsisitency(G, UCG)
 
-    # %% Random exp code
-    print("running random exp code ")
-    G = upconvGAN("fc7")
-    G.G.requires_grad_(False)
-    blendlayer = 'conv5_1'
-    layeri = list(G.G._modules).index(blendlayer)
-    preG = G.G[:layeri + 1]
-    posG = G.G[layeri + 1:]
-    c_num = preG[-1].out_channels
-    z_num = 5
-    b_num = 2
-    # %%
-    codes = torch.randn((b_num, z_num, 4096), requires_grad=True)
-    z_alpha = torch.full((b_num, z_num, c_num), 1 / z_num, requires_grad=True)
-    medtsr = preG(codes.view(b_num * z_num, -1))
-    blendtsr = (medtsr.view((b_num, z_num) + tuple(medtsr.size()[1:])) * z_alpha[:, :, :, None, None]).sum(dim=1)
-    imgs = posG(blendtsr)
-    # nn.Sequential(*list(G.G._modules)[:blending_layer])
-#%% This can work~
-# G = upconvGAN("pool5")
-# G.G.load_state_dict(torch.hub.load_state_dict_from_url(r"https://drive.google.com/uc?export=download&id=1vB_tOoXL064v9D6AKwl0gTs1a7jo68y7",progress=True))

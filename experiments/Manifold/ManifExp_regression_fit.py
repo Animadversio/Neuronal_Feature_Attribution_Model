@@ -28,13 +28,13 @@ import pandas as pd
 from tqdm import tqdm
 import pickle as pkl
 import matplotlib.pylab as plt
-from GAN_utils import upconvGAN
+from core.GAN_utils import upconvGAN
 from insilico_Exp_torch import TorchScorer
 from ZO_HessAware_Optimizers import CholeskyCMAES
-from layer_hook_utils import get_module_names, register_hook_by_module_names, \
+from core.layer_hook_utils import get_module_names, register_hook_by_module_names, \
     layername_dict, featureFetcher
 from scipy.io import loadmat
-from data_loader import load_score_mat
+from core.data_loader import load_score_mat
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
@@ -48,14 +48,14 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
-from featvis_lib import load_featnet
-from dataset_utils import ImagePathDataset, DataLoader
+from core.featvis_lib import load_featnet
+from core.dataset_utils import ImagePathDataset, DataLoader
 #%% Newer version pipeline
 # saveroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 # os.makedirs(join(saveroot, "resnet50_linf8"), exist_ok=True)
 featnet, net = load_featnet("resnet50_linf8")
 #%% Import Prediction pipeline from libray
-from neural_regress.regress_lib import calc_features, \
+from core.neural_regress.regress_lib import calc_features, \
         calc_reduce_features, sweep_regressors, evaluate_prediction, \
         merge_dict_arrays, merge_arrays, evaluate_dict
 from scipy.stats import pearsonr, spearmanr

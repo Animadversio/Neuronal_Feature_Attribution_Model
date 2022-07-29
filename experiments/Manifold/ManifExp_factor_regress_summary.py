@@ -172,7 +172,7 @@ for Animal in ["Alfa", "Beto"]:
                               col_order=["Evol", "Manif", "all", "allnat", "Gabor", "Pasu", "EvolRef"],
                               row_order=["Ridge","Lasso"],)
             g.map(sns.barplot, "FeatRed", "rho_p",
-                  order=['pca', 'srp', 'sp_avg', "spmask3", "featvec3", "factor3", "facttsr3", \
+                  order=['pca', 'srp', 'sp_avg', "spmask3", "featvec3", "factor3", "facttsr3",
                          "spmask1", "featvec1", "factor1", "facttsr1"], )
             # g = sns.FacetGrid(df_exp[df_exp.layer == featlayer], col="FeatRed", row="regressor",
             #                   height=5, aspect=0.7, ylim=(-0.2, 1.0),

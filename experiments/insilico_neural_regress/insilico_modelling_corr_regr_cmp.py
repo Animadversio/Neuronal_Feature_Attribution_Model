@@ -10,15 +10,14 @@ import pandas as pd
 from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
-from GAN_utils import upconvGAN
+from core.GAN_utils import upconvGAN
 from insilico_Exp_torch import TorchScorer
-from featvis_lib import load_featnet
-from layer_hook_utils import featureFetcher
 from ZO_HessAware_Optimizers import CholeskyCMAES
-from layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
+from core.featvis_lib import load_featnet
+from core.layer_hook_utils import featureFetcher, get_module_names, register_hook_by_module_names, layername_dict
 from collections import defaultdict
 import pickle as pkl
-from featvis_lib import tsr_posneg_factorize, tsr_factorize
+from core.featvis_lib import tsr_posneg_factorize, tsr_factorize
 import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
@@ -26,11 +25,11 @@ dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 #%% Plot the anatomical receptive field of the target scorer unit.
 import os
 import seaborn as sns
-from dataset_utils import create_imagenet_valid_dataset, DataLoader, Subset
-from neural_regress.regress_lib import calc_reduce_features_dataset,\
+from core.dataset_utils import create_imagenet_valid_dataset, DataLoader, Subset
+from core.neural_regress.regress_lib import calc_reduce_features_dataset,\
     evaluate_prediction, sweep_regressors, Ridge, Lasso
-from grad_RF_estim import grad_RF_estimate, gradmap2RF_square, fit_2dgauss
-from grad_RF_estim import grad_population_RF_estimate
+from core.grad_RF_estim import grad_RF_estimate, gradmap2RF_square, fit_2dgauss
+from core.grad_RF_estim import grad_population_RF_estimate
 from scipy.stats import pearsonr, spearmanr
 def estimate_RF_for_fit_models(fit_models, targetlayer, Hmaps, ccfactor, savedir,
                                prefix="", reps=100, batch=1, show=True,):
@@ -148,8 +147,8 @@ targetunit = (10, 3, 3)
 #%%
 matplotlib.use("Agg") # 'module://backend_interagg'
 #%%
-from torch_utils import show_imgrid, save_imgrid
-from grad_RF_estim import GAN_grad_RF_estimate
+from core.torch_utils import show_imgrid, save_imgrid
+from core.grad_RF_estim import GAN_grad_RF_estimate
 for (targetunit, targetlayer) in [
                                   # ((10, 9, 9), ".layer3.Bottleneck5"),
                                   # ((20, 9, 3), ".layer3.Bottleneck5"),

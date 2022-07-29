@@ -48,7 +48,7 @@ def area_cmp_plot(tab, varnm, targspace="all", tablab="", msk=None, inner="point
     if msk is None:
         msk = ~((tab.Animal == "Alfa") & (tab.Expi == 10))
     plt.figure(figsize=[4, 5])
-    sns.violinplot(x="area", y=varnm, data=tab[msk], order=["V1", "V4", "IT"],\
+    sns.violinplot(x="area", y=varnm, data=tab[msk], order=["V1", "V4", "IT"],
                    inner=inner, cut=0.1, bw=0.5)
     plt.hlines(0, *plt.xlim(), linestyles='-.', color="red")
     cval, pval = testProgression(tab, varnm, )
@@ -170,8 +170,8 @@ def pred_perform_cmp(nf_csv_dict, label2num, statname, modelstr="net-layer", fig
     # summary2 = sumtab.groupby(["Animal", "area"], sort=False).mean()
     # print(summary2)
     valmsk = ~sumtab.best_NFnum.isna()
-    Fval, F_pval = f_oneway(sumtab.best_NFnum[(sumtab.area=="V1")&valmsk], sumtab.best_NFnum[(sumtab.area=="V4")&valmsk], \
-                    sumtab.best_NFnum[(sumtab.area=="IT")&valmsk])
+    Fval, F_pval = f_oneway(sumtab.best_NFnum[(sumtab.area=="V1")&valmsk], sumtab.best_NFnum[(sumtab.area=="V4")&valmsk],
+                            sumtab.best_NFnum[(sumtab.area=="IT")&valmsk])
     area_num = sumtab.area.apply(areanummap)
     rval, rpval = spearmanr(area_num[valmsk], best_NFnum[valmsk])
     print("Best NF number ~ area, ANOVA F %.2f (p=%.1e)"%(Fval, F_pval))
@@ -259,7 +259,7 @@ best_model_dir = join(exproot, "best_models")
 for rowi, R in model_summary.iterrows():
     if pd.isna(R.model_str):
         continue
-    copyfile(join(exproot, R.model_str, "%s_Exp%02d_summary.png"%(R.Animal, R.Expi)), \
+    copyfile(join(exproot, R.model_str, "%s_Exp%02d_summary.png"%(R.Animal, R.Expi)),
              join(best_model_dir, "%s_Exp%02d_summary.png"%(R.Animal, R.Expi)))
 #%% Area charateristic
 for name in model_summary.netname.unique():
@@ -402,11 +402,11 @@ label2num = {"NF1":1, "NF2":2, "NF3":3, "NF5":5, "NF7":7, "NF9":9, "Full":1024, 
 sumtab, summary, _ = pred_perform_cmp(nf_csv_list, label2num, "cc_bef_norm_all", modelstr="resnet50_robust-layer2")
 sumtab, summary, _ = pred_perform_cmp(nf_csv_list, label2num, "cc_aft_norm_all", modelstr="resnet50_robust-layer2")
 #%% Compare performance of Full and NF3 model
-tab1 = pd.read_csv(r'O:\corrFeatTsr_FactorVis\models\resnet50_linf8-layer3_Full_bdr0_Tthresh_3__nobdr_res-robust' \
- '\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr0_full.csv')
+tab1 = pd.read_csv(r'O:\corrFeatTsr_FactorVis\models\resnet50_linf8-layer3_Full_bdr0_Tthresh_3__nobdr_res-robust'
+                   '\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr0_full.csv')
 explab1 = "resnet50-robust-layer3_full"
-tab2 = pd.read_csv('O:\\corrFeatTsr_FactorVis\\models\\resnet50_linf8-layer3_NF3_bdr1_Tthresh_3__nobdr_res-robust' \
- '\\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3.csv')
+tab2 = pd.read_csv('O:\\corrFeatTsr_FactorVis\\models\\resnet50_linf8-layer3_NF3_bdr1_Tthresh_3__nobdr_res-robust'
+                   '\\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3.csv')
 explab2 = "resnet50_linf8-layer3_NF3"
 pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_bef_norm_all", colorvar="area", stylevar="Animal")
 pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_bef_norm_manif", colorvar="area", stylevar="Animal")
@@ -414,8 +414,8 @@ pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_aft_norm_all", colorvar
 pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_bef_all", colorvar="area", stylevar="Animal")
 pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_aft_all", colorvar="area", stylevar="Animal")
 #%% Plot scatter for statistics of performance for Full model
-tab = pd.read_csv(r'O:\corrFeatTsr_FactorVis\models\resnet50_linf8-layer3_Full_bdr0_Tthresh_3__nobdr_res-robust' \
-                '\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr0_full.csv')
+tab = pd.read_csv(r'O:\corrFeatTsr_FactorVis\models\resnet50_linf8-layer3_Full_bdr0_Tthresh_3__nobdr_res-robust'
+                  '\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr0_full.csv')
 explab = "resnet50_linf8-layer3_Tthresh_bdr0_full"
 pred_stripe(tab, explab, varnm="cc_bef_all", kind="swarm")
 pred_stripe(tab, explab, varnm="cc_bef_norm_all", kind="swarm")
@@ -424,8 +424,8 @@ pred_stripe(tab, explab, varnm="cc_bef_manif", kind="swarm")
 pred_stripe(tab, explab, varnm="cc_bef_norm_manif", kind="swarm")
 pred_stripe(tab, explab, varnm="cc_aft_norm_manif", kind="swarm")
 #%% Plot scatter for statistics of performance for NF3 model
-tab = pd.read_csv('O:\\corrFeatTsr_FactorVis\\models\\resnet50_linf8-layer3_NF3_bdr1_Tthresh_3__nobdr_res-robust' \
- '\\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3.csv')
+tab = pd.read_csv('O:\\corrFeatTsr_FactorVis\\models\\resnet50_linf8-layer3_NF3_bdr1_Tthresh_3__nobdr_res-robust'
+                  '\\Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3.csv')
 explab = "resnet50_linf8-layer3_Tthresh_bdr1_NF3"
 pred_stripe(tab, explab, varnm="cc_bef_all", kind="swarm")
 pred_stripe(tab, explab, varnm="cc_bef_norm_all", kind="swarm")
@@ -534,7 +534,7 @@ area_cmp_plot(tab, varnm, targspace, figdir=sumdir)
 #%%
 plt.figure()
 varnm = "cc_bef_norm_gabor"
-sns.violinplot(x="Animal", y=varnm, data=tab[validmsk], order=["Alfa","Beto"],\
+sns.violinplot(x="Animal", y=varnm, data=tab[validmsk], order=["Alfa","Beto"],
                inner="points", cut=0.1, bw=0.5)
 plt.show()
 #%%

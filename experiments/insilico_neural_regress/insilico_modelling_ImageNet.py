@@ -6,16 +6,14 @@ import pickle as pkl
 from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
-from GAN_utils import upconvGAN
+from core.GAN_utils import upconvGAN
+from core.featvis_lib import load_featnet
+from core.layer_hook_utils import featureFetcher
 from insilico_Exp_torch import TorchScorer
-from featvis_lib import load_featnet
-from layer_hook_utils import featureFetcher
 from ZO_HessAware_Optimizers import CholeskyCMAES
-from layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
+from core.layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
 from collections import defaultdict
-from sklearn.decomposition import IncrementalPCA
-from sklearn.random_projection import SparseRandomProjection
-from neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
+from core.neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
     resizer, normalizer, denormalizer, PoissonRegressor, RidgeCV, Ridge, KernelRidge
 #%% Prepare CNN, GAN players
 G = upconvGAN("fc6").cuda()
@@ -38,9 +36,9 @@ Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], 
 Xfeat_transformer = {"sp_rf": lambda tsr: tsr[:, :, 6, 6].copy(),
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
 #%%
-from torch_utils import show_imgrid
-from NN_PC_visualize.NN_PC_lib import \
-    create_imagenet_valid_dataset, Dataset, DataLoader
+from core.torch_utils import show_imgrid
+from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
+
 dataset = create_imagenet_valid_dataset(imgpix=227, normalize=True)
 data_loader = DataLoader(dataset, batch_size=100,
               shuffle=False, num_workers=8)
@@ -184,7 +182,7 @@ target_scores_reevol = np.concatenate(target_scores_reevol, axis=0)
 compare_activation_prediction(target_scores_reevol, pred_scores_reevol,
                               "Reevolution-SameUnit", savedir=savedir)
 #%% BigGAN evolution
-from GAN_utils import BigGAN_wrapper, loadBigGAN
+from core.GAN_utils import BigGAN_wrapper, loadBigGAN
 BGAN = loadBigGAN().cpu().eval()
 BG = BigGAN_wrapper(BGAN)
 #%%

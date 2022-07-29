@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
 from torchvision.transforms import ToPILImage, ToTensor, Normalize, Resize
-from torch_utils import show_imgrid
+from core.torch_utils import show_imgrid
 import numpy as np
 import pandas as pd
 import pickle as pkl
@@ -16,6 +16,12 @@ import matplotlib.pylab as plt
 from os.path import join
 from collections import defaultdict
 import matplotlib
+import torch
+from tqdm import tqdm
+from core.layer_hook_utils import featureFetcher
+from core.dataset_utils import ImagePathDataset, Dataset, DataLoader
+from torch.utils.data import Subset, SubsetRandomSampler
+from copy import deepcopy
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
@@ -24,11 +30,6 @@ denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
 normalizer = Normalize(mean=[0.485, 0.456, 0.406],
                        std=[0.229, 0.224, 0.225])
 resizer = Resize(227, )
-import torch
-from tqdm import tqdm
-from layer_hook_utils import featureFetcher
-from core.dataset_utils import ImagePathDataset, Dataset, DataLoader
-from copy import deepcopy
 
 def calc_features(score_vect, imgfullpath_vect, net, featlayer,
                   batch_size=40, workers=6, img_dim=(227, 227)):
@@ -108,7 +109,6 @@ def calc_reduce_features(score_vect, imgfullpath_vect, feat_transformers, net, f
     return feattsr_col
 
 
-from torch.utils.data import Subset, SubsetRandomSampler
 def calc_reduce_features_dataset(dataset, feat_transformers, net, featlayer,
                   batch_size=40, workers=6, img_dim=(227, 227), idx_range=None):
     """Calculate reduced features for a set of images. (for memory saving)

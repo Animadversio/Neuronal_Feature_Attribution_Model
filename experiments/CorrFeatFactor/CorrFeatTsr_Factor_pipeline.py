@@ -2,11 +2,11 @@
 SUPER DUPER well written formulated pipeline for factorizations of Monkey A,B manifold experiments
 # Super useful for hyper parameter tuning. Comfortable! SHUFU
 """
-from featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
+from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
     vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
     CorrFeatScore, preprocess, show_img, pad_factor_prod
-from CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess
-from CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
 import os
 from os.path import join
 import pickle as pkl
@@ -15,8 +15,8 @@ import numpy as np
 import torch
 import matplotlib as mpl
 import matplotlib.pylab as plt
-from data_loader import mat_path, loadmat, load_score_mat
-from GAN_utils import upconvGAN
+from core.data_loader import mat_path, loadmat, load_score_mat
+from core.GAN_utils import upconvGAN
 import pandas as pd
 import seaborn as sns
 mpl.rcParams['axes.spines.right'] = False
@@ -40,8 +40,8 @@ def resample_correlation(scorecol, trial=100):
     return split_cc_mean, split_cc_std
 
 
-def predict_fit_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None,\
-                imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
+def predict_fit_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None,
+                        imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
     """ Use the weight tensor DR_Wtsr to do a linear model over 
         DR_Wtsr = pad_factor_prod(Hmaps, ccfactor, bdr=bdr)
 
@@ -192,8 +192,8 @@ def visualize_fulltsrModel(AllStat, PD, protoimg, Wtsr, explabel, savestr="", fi
 
     meanMap = np.abs(Wtsr).mean(axis=0)
     maxMap = np.abs(Wtsr).max(axis=0)
-    for ci, (Wmap, name) in enumerate(\
-        zip([meanMap,maxMap],["mean","max"])):
+    for ci, (Wmap, name) in enumerate(
+            zip([meanMap,maxMap],["mean","max"])):
         plt.sca(axs[0, 1+ci])
         im = axs[0, 1+ci].imshow(Wmap)
         axs[0, 1+ci].axis("off")
@@ -312,8 +312,8 @@ for NF in [1, 2, 5, 7, 9]:
             pref_chan = EStats[Expi - 1].evol.pref_chan
             area = area_mapping(pref_chan)
             imgpix = int(imgsize * 40)
-            explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s Fact %d" % (Animal, Expi, pref_chan, imgsize, tuple(imgpos), \
-                netname, layer, exp_suffix, bdr, rect_mode, NF)
+            explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s Fact %d" % (Animal, Expi, pref_chan, imgsize, tuple(imgpos),
+                                                                                                               netname, layer, exp_suffix, bdr, rect_mode, NF)
             print("Processing "+explabel)
             corrDict = np.load(join(r"S:\corrFeatTsr", "%s_Exp%d_Evol%s_corrTsr.npz" % (Animal, Expi, exp_suffix)),
                                allow_pickle=True)
@@ -344,23 +344,23 @@ for NF in [1, 2, 5, 7, 9]:
             # prediction for different image sets.
             score_vect_manif, imgfp_manif = load_score_mat(EStats, MStats, Expi, "Manif_avg", wdws=[(50, 200)], stimdrive="S")
             scorecol_manif  , _           = load_score_mat(EStats, MStats, Expi, "Manif_sgtr", wdws=[(50, 200)], stimdrive="S")
-            pred_scr_manif, nlpred_scr_manif, nlfunc, PredStat_manif = predict_fit_dataset(DR_Wtsr, imgfp_manif, score_vect_manif, scorecol_manif, net, layer, \
-                    netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="manif_pred_cov", suptit=explabel+" manif", show=showfig)
+            pred_scr_manif, nlpred_scr_manif, nlfunc, PredStat_manif = predict_fit_dataset(DR_Wtsr, imgfp_manif, score_vect_manif, scorecol_manif, net, layer,
+                                                                                           netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="manif_pred_cov", suptit=explabel+" manif", show=showfig)
 
             score_vect_gab, imgfp_gab = load_score_mat(EStats, MStats, Expi, "Gabor_avg", wdws=[(50, 200)], stimdrive="S")
             scorecol_gab  , _         = load_score_mat(EStats, MStats, Expi, "Gabor_sgtr", wdws=[(50, 200)], stimdrive="S")
-            pred_scr_gab, nlpred_scr_gab, nlfunc, PredStat_gab = predict_fit_dataset(DR_Wtsr, imgfp_gab, score_vect_gab, scorecol_gab, net, layer, \
-                    netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="pasu_pred_cov", suptit=explabel+" pasu", show=showfig)
+            pred_scr_gab, nlpred_scr_gab, nlfunc, PredStat_gab = predict_fit_dataset(DR_Wtsr, imgfp_gab, score_vect_gab, scorecol_gab, net, layer,
+                                                                                     netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="pasu_pred_cov", suptit=explabel+" pasu", show=showfig)
 
             score_vect_pasu, imgfp_pasu = load_score_mat(EStats, MStats, Expi, "Pasu_avg", wdws=[(50, 200)], stimdrive="S")
             scorecol_pasu  , _          = load_score_mat(EStats, MStats, Expi, "Pasu_sgtr", wdws=[(50, 200)], stimdrive="S")
-            pred_scr_pasu, nlpred_scr_pasu, nlfunc, PredStat_pasu = predict_fit_dataset(DR_Wtsr, imgfp_pasu, score_vect_pasu, scorecol_pasu, net, layer, \
-                    netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="gabor_pred_cov", suptit=explabel+" gabor", show=showfig)
+            pred_scr_pasu, nlpred_scr_pasu, nlfunc, PredStat_pasu = predict_fit_dataset(DR_Wtsr, imgfp_pasu, score_vect_pasu, scorecol_pasu, net, layer,
+                                                                                        netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="gabor_pred_cov", suptit=explabel+" gabor", show=showfig)
 
             score_vect_evoref, imgfp_evoref = load_score_mat(EStats, MStats, Expi, "EvolRef_avg", wdws=[(50, 200)], stimdrive="S")
             scorecol_evoref  , _            = load_score_mat(EStats, MStats, Expi, "EvolRef_sgtr", wdws=[(50, 200)], stimdrive="S")
-            pred_scr_evoref, nlpred_scr_evoref, nlfunc, PredStat_evoref = predict_fit_dataset(DR_Wtsr, imgfp_evoref, score_vect_evoref, scorecol_evoref, net, layer, \
-                    netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="evoref_pred_cov", suptit=explabel+" evoref", show=showfig)
+            pred_scr_evoref, nlpred_scr_evoref, nlfunc, PredStat_evoref = predict_fit_dataset(DR_Wtsr, imgfp_evoref, score_vect_evoref, scorecol_evoref, net, layer,
+                                                                                              netname, featnet, imgloader=loadimg_preprocess, batchsize=batchsize, figdir=figdir, savenm="evoref_pred_cov", suptit=explabel+" evoref", show=showfig)
             # Do nl fit on more than one image set predicted by linear model.
             [pred_scr_all, nlpred_scr_all, score_vect_all, nlfunc_all, PredStat_all] = nlfit_merged_dataset([pred_scr_manif, pred_scr_gab, pred_scr_pasu, pred_scr_evoref],
                                  [score_vect_manif, score_vect_gab, score_vect_pasu, score_vect_evoref],
@@ -405,12 +405,12 @@ for NF in [1, 2, 5, 7, 9]:
                               saveimg=False, imshow=False)
                 fact_protos = [factimgs[0, :, :, :].permute([1, 2, 0]).numpy() for factimgs in factimgs_col]
                 tsr_proto = tsrimgs[0, :, :, :].permute([1, 2, 0]).numpy()
-                figh = visualize_factorModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, Hmaps, ccfactor, explabel, \
-                    savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, fact_protos=fact_protos, tsr_proto=tsr_proto, bdr=bdr)
+                figh = visualize_factorModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, Hmaps, ccfactor, explabel,
+                                             savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, fact_protos=fact_protos, tsr_proto=tsr_proto, bdr=bdr)
             else:
                 fact_protos, tsr_proto = None, None
-                figh = visualize_factorModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, Hmaps, ccfactor, explabel, \
-                    savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, fact_protos=None, tsr_proto=None, bdr=bdr)
+                figh = visualize_factorModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, Hmaps, ccfactor, explabel,
+                                             savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, fact_protos=None, tsr_proto=None, bdr=bdr)
             if save_data:
                 saveDict = EasyDict(netname=netname, layer=layer, exp_suffix=exp_suffix, bdr=bdr, explabel=explabel,
                                     rect_mode=rect_mode, thresh=thresh, featvis_mode=featvis_mode,
@@ -475,8 +475,8 @@ for Animal in ["Alfa", "Beto"]:
         pref_chan = EStats[Expi - 1].evol.pref_chan
         area = area_mapping(pref_chan)
         imgpix = int(imgsize * 40)
-        explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s" % (Animal, Expi, pref_chan, imgsize, tuple(imgpos), \
-            netname, layer, exp_suffix, bdr, rect_mode)
+        explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s" % (Animal, Expi, pref_chan, imgsize, tuple(imgpos),
+                                                                                                   netname, layer, exp_suffix, bdr, rect_mode)
         print("Processing "+explabel)
         corrDict = np.load(join(r"S:\corrFeatTsr", "%s_Exp%d_Evol%s_corrTsr.npz" % (Animal, Expi, exp_suffix)),
                            allow_pickle=True)
@@ -500,23 +500,23 @@ for Animal in ["Alfa", "Beto"]:
         DR_Wtsr = tsr_crop_border(Wtsr, bdr=bdr)
         score_vect_manif, imgfp_manif = load_score_mat(EStats, MStats, Expi, "Manif_avg", wdws=[(50, 200)], stimdrive="S")
         scorecol_manif  , _           = load_score_mat(EStats, MStats, Expi, "Manif_sgtr", wdws=[(50, 200)], stimdrive="S")
-        pred_scr_manif, nlpred_scr_manif, nlfunc, PredStat_manif = predict_fit_dataset(DR_Wtsr, imgfp_manif, score_vect_manif, scorecol_manif, net, layer, \
-                netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="manif_pred_cov", suptit=explabel+" manif", show=showfig)
+        pred_scr_manif, nlpred_scr_manif, nlfunc, PredStat_manif = predict_fit_dataset(DR_Wtsr, imgfp_manif, score_vect_manif, scorecol_manif, net, layer,
+                                                                                       netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="manif_pred_cov", suptit=explabel+" manif", show=showfig)
 
         score_vect_gab, imgfp_gab = load_score_mat(EStats, MStats, Expi, "Gabor_avg", wdws=[(50, 200)], stimdrive="S")
         scorecol_gab  , _         = load_score_mat(EStats, MStats, Expi, "Gabor_sgtr", wdws=[(50, 200)], stimdrive="S")
-        pred_scr_gab, nlpred_scr_gab, nlfunc, PredStat_gab = predict_fit_dataset(DR_Wtsr, imgfp_gab, score_vect_gab, scorecol_gab, net, layer, \
-                netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="pasu_pred_cov", suptit=explabel+" pasu", show=showfig)
+        pred_scr_gab, nlpred_scr_gab, nlfunc, PredStat_gab = predict_fit_dataset(DR_Wtsr, imgfp_gab, score_vect_gab, scorecol_gab, net, layer,
+                                                                                 netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="pasu_pred_cov", suptit=explabel+" pasu", show=showfig)
 
         score_vect_pasu, imgfp_pasu = load_score_mat(EStats, MStats, Expi, "Pasu_avg", wdws=[(50, 200)], stimdrive="S")
         scorecol_pasu  , _          = load_score_mat(EStats, MStats, Expi, "Pasu_sgtr", wdws=[(50, 200)], stimdrive="S")
-        pred_scr_pasu, nlpred_scr_pasu, nlfunc, PredStat_pasu = predict_fit_dataset(DR_Wtsr, imgfp_pasu, score_vect_pasu, scorecol_pasu, net, layer, \
-                netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="gabor_pred_cov", suptit=explabel+" gabor", show=showfig)
+        pred_scr_pasu, nlpred_scr_pasu, nlfunc, PredStat_pasu = predict_fit_dataset(DR_Wtsr, imgfp_pasu, score_vect_pasu, scorecol_pasu, net, layer,
+                                                                                    netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="gabor_pred_cov", suptit=explabel+" gabor", show=showfig)
 
         score_vect_evoref, imgfp_evoref = load_score_mat(EStats, MStats, Expi, "EvolRef_avg", wdws=[(50, 200)], stimdrive="S")
         scorecol_evoref  , _            = load_score_mat(EStats, MStats, Expi, "EvolRef_sgtr", wdws=[(50, 200)], stimdrive="S")
-        pred_scr_evoref, nlpred_scr_evoref, nlfunc, PredStat_evoref = predict_fit_dataset(DR_Wtsr, imgfp_evoref, score_vect_evoref, scorecol_evoref, net, layer, \
-                netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="evoref_pred_cov", suptit=explabel+" evoref", show=showfig)
+        pred_scr_evoref, nlpred_scr_evoref, nlfunc, PredStat_evoref = predict_fit_dataset(DR_Wtsr, imgfp_evoref, score_vect_evoref, scorecol_evoref, net, layer,
+                                                                                          netname, featnet, imgloader=loadimg_preprocess, batchsize=62, figdir=figdir, savenm="evoref_pred_cov", suptit=explabel+" evoref", show=showfig)
         # Do nl fit on more than one image set predicted by linear model.
         [pred_scr_all, nlpred_scr_all, score_vect_all, nlfunc_all, PredStat_all] = nlfit_merged_dataset([pred_scr_manif, pred_scr_gab, pred_scr_pasu, pred_scr_evoref], 
                              [score_vect_manif, score_vect_gab, score_vect_pasu, score_vect_evoref],
@@ -557,12 +557,12 @@ for Animal in ["Alfa", "Beto"]:
                           score_mode=featvis_mode, featnet=featnet, Bsize=5, saveImgN=1, bdr=bdr, figdir=expdir, savestr="corr",
                           saveimg=False, imshow=False)
             tsr_proto = tsrimgs[0, :, :, :].permute([1, 2, 0]).numpy()  # shape [256, 256, 3] numpy array
-            figh = visualize_fulltsrModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, DR_Wtsr, explabel, \
-                savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, tsr_proto=tsr_proto, bdr=bdr)
+            figh = visualize_fulltsrModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, DR_Wtsr, explabel,
+                                          savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, tsr_proto=tsr_proto, bdr=bdr)
         else:
             tsr_proto = None
-            figh = visualize_fulltsrModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, DR_Wtsr, explabel, \
-                savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, tsr_proto=None, bdr=bdr)
+            figh = visualize_fulltsrModel(AllStat, PredData, ReprStats[Expi - 1].Manif.BestImg, DR_Wtsr, explabel,
+                                          savestr="%s_Exp%02d"%(Animal, Expi), figdir=expdir, tsr_proto=None, bdr=bdr)
         if save_data:
             saveDict = EasyDict(netname=netname, layer=layer, exp_suffix=exp_suffix, bdr=bdr, explabel=explabel,
                                 rect_mode=rect_mode, thresh=thresh, featvis_mode=featvis_mode,

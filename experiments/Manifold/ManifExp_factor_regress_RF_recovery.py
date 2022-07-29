@@ -5,14 +5,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os.path import join
-from featvis_lib import load_featnet
 from scipy.io import loadmat
-from data_loader import load_score_mat
+from core.data_loader import load_score_mat
 import pickle as pkl
-from featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
-from CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset
+from core.featvis_lib import load_featnet, CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset
 from scipy.stats import spearmanr, pearsonr
-from neural_regress.regress_lib import calc_features, \
+from core.neural_regress.regress_lib import calc_features, \
         calc_reduce_features, sweep_regressors, evaluate_prediction, \
         Ridge, Lasso, PoissonRegressor, RidgeCV, LassoCV, LinearRegression, train_test_split
 
@@ -20,7 +19,6 @@ mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 # saveroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
-from featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 
 
 def load_covtsrs(Animal, Expi, layer, ):

@@ -11,8 +11,8 @@ import seaborn as sns
 import matplotlib.pylab as plt
 import numpy.ma as ma
 from scipy.stats import ttest_rel
-from featvis_lib import load_featnet, rectify_tsr
-from CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
+from core.featvis_lib import load_featnet, rectify_tsr
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
 modelroot = r"E:\OneDrive - Washington University in St. Louis\corrFeatTsr_FactorVis\models"
 #%% Calculate the sparseness ratio and the corresponding correlation value.
 # rect_mode = "Tthresh"; thresh = (None, 3)

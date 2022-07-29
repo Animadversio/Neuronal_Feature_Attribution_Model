@@ -11,8 +11,8 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
-from featvis_lib import load_featnet
-from dataset_utils import ImagePathDataset, DataLoader
+from core.featvis_lib import load_featnet
+from core.dataset_utils import ImagePathDataset, DataLoader
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
@@ -23,7 +23,7 @@ print(matplotlib.get_backend())
 matplotlib.use('Agg')
 # matplotlib.use('module://backend_interagg')
 #%%
-from neural_regress.regress_lib import calc_features, \
+from core.neural_regress.regress_lib import calc_features, \
         calc_reduce_features, sweep_regressors, evaluate_prediction, \
         merge_dict_arrays, merge_arrays, evaluate_dict
 from scipy.stats import pearsonr, spearmanr
@@ -33,8 +33,8 @@ srp = data["srp"]
 pca = data["pca"]
 #%%
 import seaborn as sns
-from featvis_lib import tsr_posneg_factorize, rectify_tsr
-from neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
+from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_vis"
@@ -134,6 +134,6 @@ Hmat, Hmaps, ccfactor, FactStat = tsr_posneg_factorize(
     eff_wtsr_dict[('pca', 'Ridge')].numpy(),
        bdr=0, Nfactor=3, do_plot=True)
 #%%
-Hmat, Hmaps, ccfactor, FactStat = tsr_posneg_factorize(\
+Hmat, Hmaps, ccfactor, FactStat = tsr_posneg_factorize(
     rectify_tsr(eff_wtsr_dict[('pca', 'Ridge')].numpy(), mode="abs", thr=(0,0), Ttsr=None),
                                            bdr=1, Nfactor=3, do_plot=True)

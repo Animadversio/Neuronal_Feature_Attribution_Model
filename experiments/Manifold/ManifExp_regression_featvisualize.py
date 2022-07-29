@@ -9,7 +9,6 @@
 import os
 
 import matplotlib.pyplot as plt
-from sklearn.pipeline import make_pipeline
 from sklearn.random_projection import johnson_lindenstrauss_min_dim, \
             SparseRandomProjection, GaussianRandomProjection
 from sklearn.linear_model import LogisticRegression, LinearRegression, \
@@ -18,20 +17,21 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
-from featvis_lib import load_featnet
+from core.featvis_lib import load_featnet
 import pickle as pkl
 from os.path import join
 import numpy as np
 import torch
-from neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
+from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
-from GAN_utils import upconvGAN
-from layer_hook_utils import featureFetcher
+from core.GAN_utils import upconvGAN
+from core.layer_hook_utils import featureFetcher
+from core.torch_utils import show_imgrid, save_imgrid
+from core.montage_utils import crop_from_montage, make_grid_np
 import torch.nn.functional as F
 from torch.optim import Adam
-from torch_utils import show_imgrid, save_imgrid
 #%%
 G = upconvGAN()
 G.eval().cuda()
@@ -99,7 +99,6 @@ for Animal in ["Alfa", "Beto"]:
                       f"{Animal}-Exp{Expi:02d}-{featlayer}-{Xtype}-{regressor}_vis.png"))
 #%%
 """Summarize the results into a montage acrsoo methods"""
-from build_montages import crop_from_montage, make_grid_np
 # featlayer = ".layer3.Bottleneck5"
 featlayer = ".layer4.Bottleneck2"
 
@@ -117,8 +116,6 @@ for Animal in ["Alfa", "Beto"]:
         method_mtg = make_grid_np(proto_col, nrow=3)
         plt.imsave(join(featvis_dir, f"{Animal}-Exp{Expi:02d}-{featlayer}-regr_merge_vis.png"), method_mtg, )
 
-#%%
-import matplotlib.pyplot as plt
 #%%
 # regr_cfgs = [ ('srp', 'Ridge'),
 #  ('srp', 'Lasso'),

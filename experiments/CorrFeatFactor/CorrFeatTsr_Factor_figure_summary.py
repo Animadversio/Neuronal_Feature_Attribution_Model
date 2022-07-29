@@ -10,9 +10,9 @@ import seaborn as sns
 import matplotlib.pylab as plt
 import numpy.ma as ma
 from scipy.stats import ttest_rel
-from featvis_lib import load_featnet, rectify_tsr
-from CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
-from data_loader import mat_path, loadmat, load_score_mat
+from core.featvis_lib import load_featnet, rectify_tsr
+from core.data_loader import mat_path, loadmat, load_score_mat
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
 from glob import glob
 import pickle as pkl
 def showimg(ax, imgarr, cbar=False, ylabel=None, title=None, clim=None):
@@ -43,12 +43,12 @@ ReprStats_col = EasyDict()
 EStats_col = EasyDict()
 MStats_col = EasyDict()
 for Animal in ["Alfa", "Beto"]:
-    ReprStats_col[Animal] = loadmat(join(mat_path, Animal + "_ImageRepr.mat"), \
-        struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
-    MStats_col[Animal] = loadmat(join(mat_path, Animal + "_Manif_stats.mat"), \
-        struct_as_record=False, squeeze_me=True)['Stats']
-    EStats_col[Animal] = loadmat(join(mat_path, Animal + "_Evol_stats.mat"), \
-        struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
+    ReprStats_col[Animal] = loadmat(join(mat_path, Animal + "_ImageRepr.mat"),
+                                    struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
+    MStats_col[Animal] = loadmat(join(mat_path, Animal + "_Manif_stats.mat"),
+                                 struct_as_record=False, squeeze_me=True)['Stats']
+    EStats_col[Animal] = loadmat(join(mat_path, Animal + "_Evol_stats.mat"),
+                                 struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
 
 modelroot = r"E:\OneDrive - Washington University in St. Louis\corrFeatTsr_FactorVis\models"
 
@@ -288,9 +288,9 @@ for Animal, Expi in Explist[:]:
     figh.show()
 
 #%% Supplementary Figure S4O
-from featvis_lib import vis_feattsr, vis_feattsr_factor, vis_featvec_wmaps
-from CorrFeatTsr_predict_lib import visualize_fulltsrModel, visualize_factorModel
-from GAN_utils import upconvGAN
+from core.featvis_lib import vis_feattsr, vis_feattsr_factor, vis_featvec_wmaps
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import visualize_fulltsrModel, visualize_factorModel
+from core.GAN_utils import upconvGAN
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
 #%
@@ -328,8 +328,8 @@ for Animal, Expi in ExpAll[:]:#Explist[:]:
     pref_chan = EStats[Expi - 1].evol.pref_chan
     area = area_mapping(pref_chan)
     imgpix = int(imgsize * 40)
-    explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s Fact" % (Animal, Expi,\
-         pref_chan, imgsize, tuple(imgpos), netname, layer, exp_suffix, bdr, rect_mode, )
+    explabel = "%s Exp%02d Driver Chan %d, %.1f deg [%s]\nCCtsr %s-%s sfx:%s bdr%d rect %s Fact" % (Animal, Expi,
+                                                                                                    pref_chan, imgsize, tuple(imgpos), netname, layer, exp_suffix, bdr, rect_mode, )
 
     print("Processing "+explabel)
     corrDict = np.load(join(r"S:\corrFeatTsr", "%s_Exp%d_Evol%s_corrTsr.npz" % (Animal, Expi, exp_suffix)),
@@ -351,8 +351,8 @@ for Animal, Expi in ExpAll[:]:#Explist[:]:
             saveimg=False, imshow=False)
     tsr_proto = tsrimgs[0, :, :, :].permute([1, 2, 0]).numpy()  # shape [256, 256, 3] numpy array
     AllStat, PredData = data.AllStat, data.PredData
-    figh = visualize_fulltsrModel(AllStat, PredData, manif_proto, DR_Wtsr, explabel+" Full", \
-        savestr="%s_Exp%02d"%(Animal, Expi), figdir=Fulldir, tsr_proto=tsr_proto, bdr=bdr)
+    figh = visualize_fulltsrModel(AllStat, PredData, manif_proto, DR_Wtsr, explabel+" Full",
+                                  savestr="%s_Exp%02d"%(Animal, Expi), figdir=Fulldir, tsr_proto=tsr_proto, bdr=bdr)
     data.tsr_proto = tsr_proto
     pkl.dump(data, open(join(Fulldir, "%s_Exp%02d_factors.pkl" % (Animal, Expi)), 'wb'))
 
@@ -368,8 +368,8 @@ for Animal, Expi in ExpAll[:]:#Explist[:]:
                   saveimg=False, imshow=False)
     fact_protos = [factimgs[0, :, :, :].permute([1, 2, 0]).numpy() for factimgs in factimgs_col]
     tsr_proto = tsrimgs[0, :, :, :].permute([1, 2, 0]).numpy()
-    figh = visualize_factorModel(AllStat, PredData, manif_proto, Hmaps, ccfactor, explabel+" %d" % NF, \
-        savestr="%s_Exp%02d"%(Animal, Expi), figdir=NFdir, fact_protos=fact_protos, tsr_proto=tsr_proto, bdr=bdr)
+    figh = visualize_factorModel(AllStat, PredData, manif_proto, Hmaps, ccfactor, explabel+" %d" % NF,
+                                 savestr="%s_Exp%02d"%(Animal, Expi), figdir=NFdir, fact_protos=fact_protos, tsr_proto=tsr_proto, bdr=bdr)
     data.fact_protos = fact_protos
     data.tsr_proto = tsr_proto
     pkl.dump(data, open(join(NFdir, "%s_Exp%02d_factors.pkl" % (Animal, Expi)), 'wb'))
@@ -450,7 +450,7 @@ for Animal, Expi in Explist[:]:
     figh.show()
 
 #%% FigureS4B Factor number comparison
-from CorrFeatTsr_utils import area_mapping
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping
 from scipy.stats import spearmanr, f_oneway
 outdir = r"O:\Manuscript_Manifold\FigureS4B\Examples"
 
@@ -507,8 +507,8 @@ def pred_perform_cmp(nf_csv_dict, label2num, statname, modelstr="net-layer", fig
     # summary2 = sumtab.groupby(["Animal", "area"], sort=False).mean()
     # print(summary2)
     valmsk = ~sumtab.best_NFnum.isna()
-    Fval, F_pval = f_oneway(sumtab.best_NFnum[(sumtab.area=="V1")&valmsk], sumtab.best_NFnum[(sumtab.area=="V4")&valmsk], \
-                    sumtab.best_NFnum[(sumtab.area=="IT")&valmsk])
+    Fval, F_pval = f_oneway(sumtab.best_NFnum[(sumtab.area=="V1")&valmsk], sumtab.best_NFnum[(sumtab.area=="V4")&valmsk],
+                            sumtab.best_NFnum[(sumtab.area=="IT")&valmsk])
     
     areanummap = lambda A: {"V1": 1, "V4": 2, "IT": 3}[A]
     area_num = sumtab.area.apply(areanummap)

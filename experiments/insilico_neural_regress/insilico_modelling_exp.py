@@ -5,12 +5,12 @@ import pandas as pd
 from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
-from GAN_utils import upconvGAN
+from core.GAN_utils import upconvGAN
 from insilico_Exp_torch import TorchScorer
-from featvis_lib import load_featnet
-from layer_hook_utils import featureFetcher
 from ZO_HessAware_Optimizers import CholeskyCMAES
-from layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
+from core.featvis_lib import load_featnet
+from core.layer_hook_utils import featureFetcher
+from core.layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
 from collections import defaultdict
 
 import matplotlib
@@ -66,11 +66,9 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
-#%%
 from torchvision.transforms import ToPILImage, ToTensor, Normalize, Resize
-from torch_utils import show_imgrid
-from NN_PC_visualize.NN_PC_lib import \
-    create_imagenet_valid_dataset, Dataset, DataLoader
+from core.torch_utils import show_imgrid
+from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
 
 denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
                          std=[1/0.229, 1/0.224, 1/0.225])
@@ -390,9 +388,9 @@ for stat in ["pearson", "spearman", "R2"]:
         .unstack(level=[0,1]).plot(kind="barh",)
     plt.xlabel(stat)
     plt.tight_layout()
-    plt.savefig(join(dataroot, "insilico_results", \
+    plt.savefig(join(dataroot, "insilico_results",
                      "model_generalization_synopsis_" + stat + ".png"))
-    plt.savefig(join(dataroot, "insilico_results", \
+    plt.savefig(join(dataroot, "insilico_results",
                      "model_generalization_synopsis_" + stat + ".pdf"))
     plt.show()
 

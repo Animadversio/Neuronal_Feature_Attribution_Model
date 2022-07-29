@@ -1,34 +1,24 @@
 """This library provides higher level api over CorrFeatTsr_visualize_lib
 Specifically, it provides functions that visualize a feature vector / tensor in a given layer of CNN
 """
-#%%
-# %load_ext autoreload
-# %autoreload 2
-#%%
-# !subst N: E:\Network_Data_Sync
-# !subst S: E:\Network_Data_Sync
-# !subst O: "E:\OneDrive - Washington University in St. Louis"
-
-#%%
 import os
 from sys import platform
 from os.path import join
 import numpy as np
+from easydict import EasyDict
 from scipy.io import loadmat
 from sklearn.decomposition import NMF
-import matplotlib as mpl
-import matplotlib.pylab as plt
-mpl.rcParams['pdf.fonttype'] = 42
-from numpy.linalg import norm as npnorm
-from easydict import EasyDict
-from data_loader import mat_path, load_score_mat, loadmat
-from CorrFeatTsr_visualize_lib import CorrFeatScore, corr_GAN_visualize, corr_visualize, preprocess, save_imgtsr
-from GAN_utils import upconvGAN
 import torch
 from torch import nn
 from torchvision import models
-from torchvision.utils import make_grid
 from torchvision.transforms import ToPILImage
+from numpy.linalg import norm as npnorm
+from core.data_loader import mat_path, load_score_mat, loadmat
+from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore, corr_GAN_visualize, corr_visualize, preprocess, save_imgtsr
+from core.GAN_utils import upconvGAN
+import matplotlib as mpl
+import matplotlib.pylab as plt
+mpl.rcParams['pdf.fonttype'] = 42
 
 if platform == "linux":  # CHPC cluster
     ckpt_dir = "/scratch/binxu.wang/torch"

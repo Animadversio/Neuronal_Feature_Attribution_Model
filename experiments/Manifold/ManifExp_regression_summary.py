@@ -3,12 +3,12 @@ Plot the overall results across experiments, or individual experiments comparing
 
 """
 import re
-import os
 from os.path import join
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from core.montage_utils import crop_from_montage, make_grid_np
 rootdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 sumdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary"
 exptype = "Manif"
@@ -113,7 +113,6 @@ g.map(sns.barplot, "img_space", "rho_p",
       order=["Evol", "Manif", "Gabor", "Pasu", "EvolRef"])#
 plt.show()
 #%%
-from build_montages import crop_from_montage, make_grid_np
 regr_cfgs = [
              ('pca', 'Ridge'),
              ('pca', 'Lasso'),

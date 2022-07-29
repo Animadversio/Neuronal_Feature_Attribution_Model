@@ -3,18 +3,14 @@ Define the class that manage Monkey experiment data and the Experiment records
 Updated 2022/Mar.8th
 Very useful data interface in python.
 """
-import h5py
-import sys
-import os
-from os.path import join
 import shutil
 from glob import glob
-from scipy.io import loadmat
+from os.path import join
+
+import h5py
 import numpy as np
-import matplotlib.pylab as plt
-import csv
-from time import time
-import pandas as pd
+from scipy.io import loadmat
+
 # ExpTable = pd.read_excel(r"D:\Network_Data_Sync\ExpSpecTable_Augment.xlsx")
 rspPath = r"S:\Data-Ephys-MAT"
 NetrspPath = r"N:\Data-Ephys-MAT"

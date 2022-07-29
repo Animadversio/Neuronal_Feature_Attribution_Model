@@ -6,30 +6,20 @@ Basic building blocks of a feature visualization
 All these components are heavily used in higher level api in featvis_lib
 
 """
-# Alias the disks for usage
-# !subst N: E:\Network_Data_Sync
-# !subst S: E:\Network_Data_Sync
-# !subst O: "E:\OneDrive - Washington University in St. Louis"
-#%%
-from scipy.io import loadmat
-from skimage.io import imread, imread_collection
 import os
 from os.path import join
-from glob import glob
-import numpy as np
-from tqdm import tqdm
-from time import time
-import matplotlib.pylab as plt
-import torch
-from torchvision import models, transforms
-import torch.nn.functional as F
-from torchvision.transforms import ToPILImage
-from skimage.transform import resize
-from kornia.filters import median_blur, gaussian_blur2d
 
-from collections import defaultdict
-from scipy.stats import t
-from easydict import EasyDict
+import matplotlib.pylab as plt
+import numpy as np
+import torch
+import torch.nn.functional as F
+from kornia.filters import gaussian_blur2d
+from scipy.io import loadmat
+from skimage.transform import resize
+from torchvision import models, transforms
+from torchvision.transforms import ToPILImage
+from tqdm import tqdm
+
 layername_dict={"alexnet":["conv1", "conv1_relu", "pool1",
                             "conv2", "conv2_relu", "pool2",
                             "conv3", "conv3_relu",
@@ -385,7 +375,7 @@ def corr_GAN_visualize(G, scorer, CNNnet, preprocess, layername, tfms=[],
             mtg_sel.save(join(figdir, "%s_G_%s_best.png" % (savestr, layername)))
     return finimgs, mtg, score_traj
 
-#%%
+
 if __name__ == "__main__":
     # Prepare the networks
     VGG = models.vgg16(pretrained=True)

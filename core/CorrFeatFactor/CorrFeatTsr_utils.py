@@ -27,9 +27,9 @@ def area_mapping(num):
     elif num >= 49: return "V4"
 
 
-def add_suffix(dict: dict, sfx: str=""):
+def add_suffix(D: dict, sfx: str=""):
     newdict = EasyDict()
-    for k, v in dict.items():
+    for k, v in D.items():
         newdict[k + sfx] = v
     return newdict
 

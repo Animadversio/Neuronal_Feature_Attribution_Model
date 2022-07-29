@@ -21,10 +21,10 @@ from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
 from core.GAN_utils import upconvGAN
-from layer_hook_utils import featureFetcher
+from core.layer_hook_utils import featureFetcher
 import torch.nn.functional as F
 from torch.optim import Adam
-from torch_utils import show_imgrid, save_imgrid
+from core.torch_utils import show_imgrid, save_imgrid
 
 
 def load_covtsrs(Animal, Expi, layer, ):
@@ -136,7 +136,7 @@ for Animal in ["Alfa", "Beto"]:
 
 #%%
 """Summarize the results into a montage acrsoo methods"""
-from build_montages import crop_from_montage, make_grid_np
+from core.montage_utils import crop_from_montage, make_grid_np
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 perexproot = join(saveroot, "summary", "per_experiment")
 regress_cfgs =  [('spmask3', 'Ridge'),

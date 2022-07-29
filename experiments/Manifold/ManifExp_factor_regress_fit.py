@@ -15,12 +15,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os.path import join
-from featvis_lib import load_featnet
+from core.featvis_lib import load_featnet
 from scipy.io import loadmat
-from data_loader import load_score_mat
+from core.data_loader import load_score_mat
 import pickle as pkl
-from featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
-from CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset
+from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset, score_images_torchdata
 from scipy.stats import spearmanr, pearsonr
 #%%
 def load_covtsrs(Animal, Expi, layer, ):
@@ -104,7 +104,7 @@ def evaluate_dict(y_pred_dict, y_true, label, savedir=None):
 
 
 #%% Import Prediction pipeline from libray
-from neural_regress.regress_lib import calc_features, \
+from core.neural_regress.regress_lib import calc_features, \
         calc_reduce_features, sweep_regressors, evaluate_prediction, \
         Ridge, Lasso, PoissonRegressor, RidgeCV, LassoCV, LinearRegression, train_test_split
 
@@ -247,7 +247,6 @@ pred_score = score_images(featnet, scorer, layer, imgfullpath_vect, imgloader=lo
 scorer.clear_hook()
 nlfunc, popt, pcov, scaling, nlpred_score, Stat = fitnl_predscore(pred_score.numpy(), score_vect)
 #%%
-from CorrFeatTsr_predict_lib import score_images_torchdata
 scorer = CorrFeatScore()
 scorer.register_hooks(net, layer, netname="resnet50_linf8")
 rank1_Wtsr = [pad_factor_prod(Hmaps[:, :, i:i+1], ccfactor[:, i:i+1], bdr=bdr) for i in range(3)]

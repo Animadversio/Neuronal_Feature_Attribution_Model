@@ -13,8 +13,8 @@ data['AllStat']['cc_bef_norm_gabor']
 
 
 #%%
-df_sum = pd.read_csv(join(modelroot, modelstr, \
-                 "Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3_CV.csv"))
+df_sum = pd.read_csv(join(modelroot, modelstr,
+                          "Both_pred_stats_resnet50_linf8-layer3_Tthresh_bdr1_NF3_CV.csv"))
 
 df_sum.cc_aft_norm_gabor[df_sum.area == "V1"]
 df_sum.cc_bef_norm_gabor[df_sum.area == "V1"]

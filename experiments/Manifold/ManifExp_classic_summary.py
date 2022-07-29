@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.io import loadmat
-from data_loader import load_score_mat
+from core.data_loader import load_score_mat
 rootdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 sumdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary"
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"

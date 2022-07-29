@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pptx
 from pptx import Presentation, slide
 from pptx.util import Inches
-from pptx_utils import *
+from core.pptx_utils import *
 from scipy.io import loadmat
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 #%%

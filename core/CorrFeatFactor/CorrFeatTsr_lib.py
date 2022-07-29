@@ -286,8 +286,8 @@ def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, Exp
     nlayer = len(layers2plot)
     figh, axs = plt.subplots(3,nlayer,figsize=[10/3*nlayer, 10])
     if ReprStats is not None:
-        protos = [ReprStats[Expi-1].Evol.BestImg,\
-                  ReprStats[Expi-1].Evol.BestBlockAvgImg,\
+        protos = [ReprStats[Expi-1].Evol.BestImg,
+                  ReprStats[Expi-1].Evol.BestBlockAvgImg,
                   ReprStats[Expi-1].Manif.BestImg]
         labels = ["Best Evol Img",
                 "Best BlockAvg Img",

@@ -124,9 +124,9 @@ def fitnl_predscore(pred_score_np: np.ndarray, score_vect: np.ndarray, show=True
     # first normalize scale of pred score
     scaling = 1/pred_score_np.std()*score_vect.std()
     pred_score_np_norm = pred_score_np * scaling
-    popt, pcov = curve_fit(softplus, pred_score_np_norm, score_vect, \
-          p0=[1, min(score_vect), np.median(pred_score_np_norm)], \
-          bounds=([0, min(score_vect) - 10, min(pred_score_np_norm)-10], 
+    popt, pcov = curve_fit(softplus, pred_score_np_norm, score_vect,
+                           p0=[1, min(score_vect), np.median(pred_score_np_norm)],
+                           bounds=([0, min(score_vect) - 10, min(pred_score_np_norm)-10],
                   [np.inf, max(score_vect), max(pred_score_np_norm)]))
     print("NL parameters: amp %.1e baseline %.1e thresh %.1e" % tuple(popt))
     nlpred_score = softplus(pred_score_np_norm, *popt)
@@ -201,8 +201,8 @@ def resample_correlation(scorecol, trial=100):
     return split_cc_mean, split_cc_std
 
 
-def predict_fit_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None, nlfunc=None,\
-                imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
+def predict_fit_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None, nlfunc=None,
+                        imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
     """ Use the weight tensor DR_Wtsr to do a linear model over 
         DR_Wtsr = pad_factor_prod(Hmaps, ccfactor, bdr=bdr)
     Note when the exgeneous `nlfunc` is provided, it will not do fitting, but use the exogeneous one.  
@@ -245,8 +245,8 @@ def predict_fit_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, la
     return pred_score, nlpred_score, nlfunc, PredStat
 
 
-def predict_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None,nlfunc=lambda x:x, \
-                imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
+def predict_dataset(DR_Wtsr, imgfullpath_vect, score_vect, scorecol, net, layer, netname="", featnet=None,nlfunc=lambda x:x,
+                    imgloader=loadimg_preprocess, batchsize=62, show=True, figdir="", savenm="pred", suptit=""):
     """ Use the weight tensor DR_Wtsr to do a linear model over features in CNN net, layer, with netname.
         DR_Wtsr = pad_factor_prod(Hmaps, ccfactor, bdr=bdr)
 
@@ -411,8 +411,8 @@ def visualize_fulltsrModel(AllStat, PD, protoimg, Wtsr, explabel, savestr="", fi
 
     meanMap = np.abs(Wtsr).mean(axis=0)
     maxMap = np.abs(Wtsr).max(axis=0)
-    for ci, (Wmap, name) in enumerate(\
-        zip([meanMap,maxMap],["mean","max"])):
+    for ci, (Wmap, name) in enumerate(
+            zip([meanMap,maxMap],["mean","max"])):
         plt.sca(axs[0, 1+ci])
         im = axs[0, 1+ci].imshow(Wmap)
         axs[0, 1+ci].axis("off")
