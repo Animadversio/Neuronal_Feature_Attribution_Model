@@ -19,6 +19,7 @@ from skimage.filters import gaussian
 from collections import defaultdict
 from scipy.stats import t
 from easydict import EasyDict
+from tqdm import tqdm
 
 #  New name array to match that of matlab
 layername_dict = {"alexnet":["conv1", "conv1_relu", "pool1",
@@ -192,14 +193,46 @@ class Corr_Feat_Machine:
         print('Feature Correlator Destructed, Hooks deleted.')
 
 
-#%%
+def Corr_Feat_pipeline(net, featFetcher, score_vect, imgfullpath_vect, imgload_func,
+        online_compute=True, batchsize=121, savedir="S:\corrFeatTsr", savenm="Evol"):
+    """The pipeline to compute Correlation Tensor for a bunch of images and reponses.
+    The correlation results will be saved in savedir, "{savenm}_corrTsr.npz"
+
+    """
+    imgN = len(imgfullpath_vect)
+    if type(score_vect) is not list:
+        score_tsr = torch.tensor(score_vect).float()  # torchify the score vector
+        rep_score = False
+    else:
+        rep_score = True
+    csr = 0
+    pbar = tqdm(total=imgN)
+    while csr < imgN:
+        cend = min(csr + batchsize, imgN)
+        input_tsr = imgload_func(imgfullpath_vect[csr:cend])  #
+        # input_tsr = loadimg_embed_preprocess(imgfullpath_vect[csr:cend], imgpix=imgpix, fullimgsz=(256, 256))
+        # Pool through VGG
+        with torch.no_grad():
+            part_tsr = net(input_tsr.cuda()).cpu()
+        if rep_score:
+            featFetcher.update_corr_rep(score_vect[csr:cend])
+        else:
+            featFetcher.update_corr(score_tsr[csr:cend])
+        # update bar!
+        pbar.update(cend - csr)
+        csr = cend
+    pbar.close()
+    featFetcher.calc_corr()
+    np.savez(join(savedir, "%s_corrTsr.npz" % (savenm)), **featFetcher.make_savedict())
+
+
 def visualize_cctsr(featFetcher: Corr_Feat_Machine, layers2plot: list, ReprStats, Expi, Animal, ExpType, Titstr, figdir=""):
     """ Given a `Corr_Feat_Machine` show the tensors in the different layers of it. 
-    Demo
-    ExpType = "EM_cmb"
-    layers2plot = ['conv3_3', 'conv4_3', 'conv5_3']
-    figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, ExpType, )
-    figh.savefig(join("S:\corrFeatTsr","VGGsummary","%s_Exp%d_%s_corrTsr_vis.png"%(Animal,Expi,ExpType)))
+    Example:
+        ExpType = "EM_cmb"
+        layers2plot = ['conv3_3', 'conv4_3', 'conv5_3']
+        figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, ExpType, )
+        figh.savefig(join("S:\corrFeatTsr","VGGsummary","%s_Exp%d_%s_corrTsr_vis.png"%(Animal,Expi,ExpType)))
     :param featFetcher:
     :param layers2plot:
     :param ReprStats:
@@ -237,11 +270,11 @@ def visualize_cctsr(featFetcher: Corr_Feat_Machine, layers2plot: list, ReprStats
 
 def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, ExpType, Titstr, figdir="", imgpix=120, fullimgsz=224, borderblur=True):
     """ Same as `visualize_cctsr` but embed the images in a frame
-    Demo
-    ExpType = "EM_cmb"
-    layers2plot = ['conv3_3', 'conv4_3', 'conv5_3']
-    figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, ExpType, )
-    figh.savefig(join("S:\corrFeatTsr","VGGsummary","%s_Exp%d_%s_corrTsr_vis.png"%(Animal,Expi,ExpType)))
+    Example:
+        ExpType = "EM_cmb"
+        layers2plot = ['conv3_3', 'conv4_3', 'conv5_3']
+        figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, ExpType, )
+        figh.savefig(join("S:\corrFeatTsr","VGGsummary","%s_Exp%d_%s_corrTsr_vis.png"%(Animal,Expi,ExpType)))
     :param featFetcher:
     :param layers2plot:
     :param ReprStats:
@@ -291,40 +324,6 @@ def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, Exp
     figh.savefig(join(figdir, "%s_Exp%d_%s_corrTsr_vis.png" % (Animal, Expi, ExpType)))
     figh.savefig(join(figdir, "%s_Exp%d_%s_corrTsr_vis.pdf" % (Animal, Expi, ExpType)))
     return figh
-
-#%%
-from tqdm import tqdm
-def Corr_Feat_pipeline(net, featFetcher, score_vect, imgfullpath_vect, imgload_func, 
-        online_compute=True, batchsize=121, savedir="S:\corrFeatTsr", savenm="Evol"):
-    """The pipeline to compute Correlation Tensor for a bunch of images and reponses.
-    The correlation results will be saved in savedir, "{savenm}_corrTsr.npz"
-
-    """
-    imgN = len(imgfullpath_vect)
-    if type(score_vect) is not list:
-        score_tsr = torch.tensor(score_vect).float()  # torchify the score vector
-        rep_score = False
-    else:
-        rep_score = True
-    csr = 0
-    pbar = tqdm(total=imgN)
-    while csr < imgN:
-        cend = min(csr + batchsize, imgN)
-        input_tsr = imgload_func(imgfullpath_vect[csr:cend])  #
-        # input_tsr = loadimg_embed_preprocess(imgfullpath_vect[csr:cend], imgpix=imgpix, fullimgsz=(256, 256))
-        # Pool through VGG
-        with torch.no_grad():
-            part_tsr = net(input_tsr.cuda()).cpu()
-        if rep_score:
-            featFetcher.update_corr_rep(score_vect[csr:cend])
-        else:
-            featFetcher.update_corr(score_tsr[csr:cend])
-        # update bar!
-        pbar.update(cend - csr)
-        csr = cend
-    pbar.close()
-    featFetcher.calc_corr()
-    np.savez(join(savedir, "%s_corrTsr.npz" % (savenm)), **featFetcher.make_savedict())
 
 #%%
 import torch.nn.functional as F
@@ -412,82 +411,3 @@ def loadimg_embed_preprocess(imgfullpath, imgpix=120, fullimgsz=224, borderblur=
     else:
         input_tsr = (input_tsr - RGBmean) / RGBstd
         return input_tsr
-#%%
-#%% Routine for loading images
-# loadbatch = 50
-# ppimgs = []
-# for img_path in tqdm(imgfullpath_vect[-loadbatch:]):
-#     # should be taken care of by the CNN part
-#     curimg = imread(img_path)
-#     x = preprocess(curimg)
-#     ppimgs.append(x.unsqueeze(0))
-# input_tsr = torch.cat(tuple(ppimgs), dim=0)
-# # input_tsr = median_blur(input_tsr, (3, 3)) # this looks good but very slow
-# input_tsr = gaussian_blur2d(input_tsr, (5, 5), sigma=(3, 3))
-# input_tsr = F.interpolate(input_tsr, size=[imgpix, imgpix], align_corners=True, mode='bilinear')
-# input_tsr = F.interpolate(input_tsr, size=[224, 224], align_corners=True, mode='bilinear')
-# #%%
-# #%% Note there are some high freq noise signal in the image so may be misleading to the CNN
-# ToPILImage()(torch.clamp(input_tsr[-1]*0.2+0.4, 0, 1)).show()
-# ToPILImage()(input_tsr[-1]).show()
-# ToPILImage()(torch.clamp(median_blur(input_tsr[-2:-1], (3, 3))[0]*0.2+0.4, 0, 1)).show()
-# ToPILImage()(median_blur(input_tsr[-2:-1], (3, 3))[0]).show()
-# We want to remove the checkerboard noise!
-#%%
-#
-# figdir = join("S:\corrFeatTsr", "VGGsummary")
-# layers2plot = ["conv5_3", "conv4_3", "conv3_3", "conv2_2", ]
-# for Expi in range(1, len(EStats) + 1):
-#     imgsize = EStats[Expi - 1].evol.imgsize
-#     imgpos = EStats[Expi - 1].evol.imgpos
-#     pref_chan = EStats[Expi - 1].evol.pref_chan
-#     imgpix = int(imgsize * 40)
-#     titstr = "Driver Chan %d, %.1f deg [%s]" % (pref_chan, imgsize, tuple(imgpos))
-#
-#     featFetcher = Corr_Feat_Machine()
-#     featFetcher.register_hooks(VGG, ["conv2_2", "conv3_3", "conv4_3", "conv5_3"])
-#     featFetcher.init_corr()
-#
-#     score_vect, imgfullpath_vect = load_score_mat(EStats, MStats, Expi, "Evol", wdws=[(50, 200)])
-#     imgN = len(imgfullpath_vect)
-#     score_tsr = torch.tensor(score_vect).float()  # torchify the score vector
-#     csr = 0
-#     pbar = tqdm(total=imgN)
-#     while csr < imgN:
-#         cend = min(csr + batchsize, imgN)
-#         input_tsr = loadimg_preprocess(imgfullpath_vect[csr:cend], imgpix=imgpix)
-#         # input_tsr = loadimg_embed_preprocess(imgfullpath_vect[csr:cend], imgpix=imgpix, fullimgsz=(256, 256))
-#         # Pool through VGG
-#         with torch.no_grad():
-#             part_tsr = VGG.features(input_tsr.cuda()).cpu()
-#         featFetcher.update_corr(score_tsr[csr:cend])
-#         # update bar!
-#         pbar.update(cend - csr)
-#         csr = cend
-#     pbar.close()
-#     featFetcher.calc_corr()
-#     np.savez(join("S:\corrFeatTsr", "%s_Exp%d_Evol_corrTsr.npz" % (Animal, Expi)), **featFetcher.make_savedict())
-#     figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, "Evol", titstr, figdir=figdir)
-#
-#     # Load manifold experiment, single trial response
-#     scorecol_M, imgfullpath_vect_M = load_score_mat(EStats, MStats, Expi, "Manif_sgtr", wdws=[(50, 200)])
-#     imgN_M = len(imgfullpath_vect_M)
-#     csr = 0
-#     pbar = tqdm(total=imgN_M)
-#     while csr < imgN_M:
-#         cend = min(csr + batchsize, imgN_M)
-#         input_tsr = loadimg_preprocess(imgfullpath_vect[csr:cend], imgpix=imgpix)
-#         # input_tsr = loadimg_embed_preprocess(imgfullpath_vect_M[csr:cend], imgpix=imgpix, fullimgsz=(256, 256))
-#         # Pool through VGG
-#         with torch.no_grad():
-#             part_tsr = VGG.features(input_tsr.cuda()).cpu()
-#         featFetcher.update_corr_rep(scorecol_M[csr:cend])
-#         # update bar!
-#         pbar.update(cend - csr)
-#         csr = cend
-#     pbar.close()
-#
-#     featFetcher.calc_corr()
-#     np.savez(join("S:\corrFeatTsr", "%s_Exp%d_EM_corrTsr.npz" % (Animal, Expi)), **featFetcher.make_savedict())
-#     figh = visualize_cctsr(featFetcher, layers2plot, ReprStats, Expi, Animal, "EM_sgtr", titstr, figdir=figdir)
-#     featFetcher.clear_hook()

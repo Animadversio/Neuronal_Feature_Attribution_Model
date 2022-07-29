@@ -1,15 +1,20 @@
 """ Functions of Using CorrFeatTsr Models (`CorrFeatScore`) to predict neural response """
+#% This Section contains functions that do predictions for the images.
 import torch
 import numpy as np
 from easydict import EasyDict
+from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
 import matplotlib as mpl
-#% This Section contains functions that do predictions for the images.
-from tqdm import tqdm
 from scipy.optimize import curve_fit
+import seaborn as sns
+from CorrFeatTsr_utils import multichan2rgb
 from CorrFeatTsr_lib import loadimg_preprocess
 from CorrFeatTsr_visualize_lib import CorrFeatScore
+from core.dataset_utils import ImagePathDataset, DataLoader
+from torchvision.transforms import ToPILImage, ToTensor, Resize, Compose, \
+            Normalize, GaussianBlur
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 def score_images(featNet, scorer, layername, imgfps, imgloader=loadimg_preprocess, batchsize=70,):
@@ -50,9 +55,7 @@ def score_images(featNet, scorer, layername, imgfps, imgloader=loadimg_preproces
     score_all = torch.cat(tuple(score_all), dim=0)
     return score_all
 
-from torchvision.transforms import ToPILImage, ToTensor, Resize, Compose, \
-            Normalize, GaussianBlur
-from core.dataset_utils import ImagePathDataset, DataLoader
+
 def score_images_torchdata(featNet, scorer, layername, imgfps,
                            batchsize=70, workers=6, imgloader=loadimg_preprocess,):
     """ Basic function to use scorers to load and score a bunch of imgfps.
@@ -319,8 +322,6 @@ def nlfit_merged_dataset(pred_score_col:list, score_vect_col:list, scorecol_col:
     return pred_score_all, nlpred_score_all, score_vect_all, nlfunc, PredStat
 
 
-import seaborn as sns
-from CorrFeatTsr_utils import multichan2rgb
 def visualize_factorModel(AllStat, PD, protoimg, Hmaps, ccfactor, explabel, savestr="", figdir="", show=True,
                           fact_protos=None, tsr_proto=None, bdr=0):
     """Summarize the evaluations of a factor model."""

@@ -1,8 +1,4 @@
 """Post hoc analysis and summary for the CorrFeatTsr analysis"""
-from featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
-    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
-    CorrFeatScore, preprocess, show_img, pad_factor_prod
-from CorrFeatTsr_predict_lib import fitnl_predscore, loadimg_preprocess, score_images
 import os
 from os.path import join
 from glob import glob
@@ -20,8 +16,12 @@ import torch
 import seaborn as sns
 import matplotlib as mpl
 import matplotlib.pylab as plt
-from data_loader import mat_path, loadmat, load_score_mat
-from GAN_utils import upconvGAN
+from core.data_loader import mat_path, loadmat, load_score_mat
+from core.GAN_utils import upconvGAN
+from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
+    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
+    CorrFeatScore, preprocess, show_img, pad_factor_prod
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, loadimg_preprocess, score_images
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 #%%
