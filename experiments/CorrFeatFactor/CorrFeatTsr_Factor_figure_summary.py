@@ -14,8 +14,8 @@ from tqdm import tqdm
 
 from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
 from core.neural_data_loader import mat_path, loadmat
-from core.featvis_lib import load_featnet, rectify_tsr
-
+from core.featvis_lib import rectify_tsr
+from core.CNN_scorers import load_featnet
 
 def showimg(ax, imgarr, cbar=False, ylabel=None, title=None, clim=None):
     if clim is None:

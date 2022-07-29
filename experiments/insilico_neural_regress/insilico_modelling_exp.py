@@ -5,9 +5,8 @@ from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
 from core.GAN_utils import upconvGAN
-from core.CNN_scorers import TorchScorer
+from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
-from core.featvis_lib import load_featnet
 from core.layer_hook_utils import featureFetcher
 from collections import defaultdict
 

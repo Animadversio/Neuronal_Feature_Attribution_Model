@@ -4,8 +4,8 @@ Then use PCA and sparse random projection to do neuron prediction.
 """
 from torch.utils.data import Subset
 
+from core.CNN_scorers import load_featnet
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
-from core.featvis_lib import load_featnet
 from core.neural_regress.regress_lib import featureFetcher, tqdm, torch, np
 
 

@@ -8,7 +8,7 @@ import torch
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
 
-from core.featvis_lib import load_featnet
+from core.CNN_scorers import load_featnet
 from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
 from core.neural_regress.sklearn_torchify_lib import LinearRegression_torch, PLS_torch
 

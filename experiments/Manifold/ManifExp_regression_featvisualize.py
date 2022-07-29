@@ -17,7 +17,7 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from sklearn.random_projection import SparseRandomProjection
 
-from core.featvis_lib import load_featnet
+from core.CNN_scorers import load_featnet
 from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
 

@@ -5,12 +5,11 @@ import pickle as pkl
 from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
-from core.GAN_utils import upconvGAN
-from core.featvis_lib import load_featnet
-from core.layer_hook_utils import featureFetcher
-from core.CNN_scorers import TorchScorer
-from core.Optimizers import CholeskyCMAES
 from collections import defaultdict
+from core.GAN_utils import upconvGAN
+from core.CNN_scorers import TorchScorer, load_featnet
+from core.layer_hook_utils import featureFetcher
+from core.Optimizers import CholeskyCMAES
 from core.neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
     resizer, normalizer, PoissonRegressor, Ridge, KernelRidge
 #%% Prepare CNN, GAN players

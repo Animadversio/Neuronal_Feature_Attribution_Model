@@ -26,19 +26,19 @@ import pandas as pd
 import pickle as pkl
 import matplotlib.pylab as plt
 from scipy.io import loadmat
-from core.neural_data_loader import load_score_mat
-mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
-Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
-Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
-#%%
 from sklearn.random_projection import SparseRandomProjection
 from sklearn.linear_model import Ridge, Lasso, PoissonRegressor
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
-from core.featvis_lib import load_featnet
 
+from core.CNN_scorers import load_featnet
+from core.neural_data_loader import load_score_mat
+
+mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
+Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
+Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
 #%% Newer version pipeline
 # saveroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 # os.makedirs(join(saveroot, "resnet50_linf8"), exist_ok=True)
