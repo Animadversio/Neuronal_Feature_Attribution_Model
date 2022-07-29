@@ -2,23 +2,26 @@
 SUPER DUPER well written formulated pipeline for factorizations of Monkey A,B manifold experiments
 # Super useful for hyper parameter tuning. Comfortable! SHUFU
 """
-from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
-    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
-    CorrFeatScore, preprocess, show_img, pad_factor_prod
-from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess
-from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
 import os
-from os.path import join
 import pickle as pkl
-from easydict import EasyDict
-import numpy as np
-import torch
+from os.path import join
+
 import matplotlib as mpl
 import matplotlib.pylab as plt
-from core.data_loader import mat_path, loadmat, load_score_mat
-from core.GAN_utils import upconvGAN
+import numpy as np
 import pandas as pd
 import seaborn as sns
+import torch
+from easydict import EasyDict
+
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
+from core.GAN_utils import upconvGAN
+from core.data_loader import mat_path, loadmat, load_score_mat
+from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
+    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
+    CorrFeatScore, show_img, pad_factor_prod
+
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 
@@ -580,7 +583,7 @@ summarize_tab(tab)
 
 
 #%% Test transform robustness to feature visualization. 
-from lucent.optvis.transform import standard_transforms, pad, jitter, random_scale, random_rotate, jitter
+from lucent.optvis.transform import random_rotate, jitter
 tfms = [
     jitter(8),
     # random_scale([1 + (i - 5) / 50.0 for i in range(11)]),

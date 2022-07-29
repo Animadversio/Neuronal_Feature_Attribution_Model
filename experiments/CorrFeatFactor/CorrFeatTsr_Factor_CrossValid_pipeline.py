@@ -1,84 +1,20 @@
 import os
+import sys
 from os.path import join
-import pickle as pkl
-from easydict import EasyDict
-import numpy as np
-import pandas as pd
-import torch
-import matplotlib as mpl
 import matplotlib.pylab as plt
-import seaborn as sns
+import numpy as np
+import pickle as pkl
+import pandas as pd
+from easydict import EasyDict
+
+from core.CorrFeatFactor.CorrFeatTsr_predict_lib import loadimg_preprocess, predict_fit_dataset, \
+    predict_dataset, nlfit_merged_dataset, visualize_fulltsrModel, visualize_factorModel
+from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts
 from core.GAN_utils import upconvGAN
 from core.data_loader import mat_path, loadmat, load_score_mat
-from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
-    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
-    CorrFeatScore, preprocess, show_img, pad_factor_prod
-from core.CorrFeatFactor.CorrFeatTsr_predict_lib import loadimg_preprocess, fitnl_predscore, score_images,  predict_fit_dataset, \
-    predict_dataset, nlfit_merged_dataset, visualize_fulltsrModel, visualize_factorModel
-from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merge_dicts, multichan2rgb
+from core.featvis_lib import load_featnet, rectify_tsr, tsr_posneg_factorize, vis_feattsr, pad_factor_prod
 
-# def visualize_fulltsrModel(AllStat, PD, protoimg, Wtsr, explabel, savestr="", figdir="", show=True,
-#                            tsr_proto=None, bdr=0):
-#     """Summarize the evaluations of a full tsr linear model."""
-#     ncol = 4  # max(4, NF+1)
-#     if tsr_proto is not None:
-#         show_proto = True
-#         r_pad = 1
-#     else:
-#         show_proto = False
-#         r_pad = 0
-#     nrow = r_pad + 2
-#     figh, axs = plt.subplots(nrow, ncol, squeeze=False, figsize=[ncol * 4, nrow * 3])
-#     axs[0, 0].imshow(protoimg)
-#     axs[0, 0].axis("off")
-#
-#     meanMap = np.abs(Wtsr).mean(axis=0)
-#     maxMap = np.abs(Wtsr).max(axis=0)
-#     for ci, (Wmap, name) in enumerate( \
-#             zip([meanMap, maxMap], ["mean", "max"])):
-#         plt.sca(axs[0, 1 + ci])
-#         im = axs[0, 1 + ci].imshow(Wmap)
-#         axs[0, 1 + ci].axis("off")
-#         figh.colorbar(im)
-#         axs[0, 1 + ci].set_title("W map: %s sum" % name)
-#
-#     if show_proto:
-#         axs[1, 0].imshow(tsr_proto)
-#         axs[1, 0].axis("off")
-#
-#     axs[r_pad + 1, 0].scatter(PD.pred_scr_manif, PD.nlpred_scr_manif, alpha=0.3, color='k', s=9)
-#     axs[r_pad + 1, 0].scatter(PD.pred_scr_manif, PD.score_vect_manif, alpha=0.5, label="manif", s=25)
-#     axs[r_pad + 1, 1].scatter(PD.nlpred_scr_manif, PD.score_vect_manif, alpha=0.5, s=25)
-#     axs[r_pad + 1, 1].set_aspect(1, adjustable='datalim')
-#     axs[r_pad + 1, 0].set_ylabel("Observed Scores")
-#     axs[r_pad + 1, 0].set_xlabel("Factor Linear Pred")
-#     axs[r_pad + 1, 1].set_xlabel("Factor Pred + nl")
-#     axs[r_pad + 1, 0].set_title("Manif: Before NL Fit corr %.3f" % (AllStat.cc_bef_manif))
-#     axs[r_pad + 1, 1].set_title("Manif: After NL Fit corr %.3f" % (AllStat.cc_aft_manif))
-#     axs[r_pad + 1, 0].legend()
-#
-#     imglabel = AllStat.Nimg_manif * ["manif"] + AllStat.Nimg_gabor * ["gabor"] + \
-#                AllStat.Nimg_pasu * ["pasu"] + AllStat.Nimg_evoref * ["evoref"]
-#     axs[r_pad + 1, 2].scatter(PD.pred_scr_all, PD.nlpred_scr_all, alpha=0.3, color='k', s=9)
-#     sns.scatterplot(x=PD.pred_scr_all, y=PD.score_vect_all, hue=imglabel, alpha=0.5, ax=axs[r_pad + 1, 2])
-#     sns.scatterplot(x=PD.nlpred_scr_all, y=PD.score_vect_all, hue=imglabel, alpha=0.5, ax=axs[r_pad + 1, 3])
-#     axs[r_pad + 1, 3].set_aspect(1, adjustable='datalim')
-#     axs[r_pad + 1, 2].set_ylabel("Observed Scores")
-#     axs[r_pad + 1, 2].set_xlabel("Factor Linear Pred")
-#     axs[r_pad + 1, 3].set_xlabel("Factor Pred + nl")
-#     axs[r_pad + 1, 2].set_title("All: Before NL Fit corr %.3f" % (AllStat.cc_bef_all))
-#     axs[r_pad + 1, 3].set_title("All: After NL Fit corr %.3f" % (AllStat.cc_aft_all))
-#     axs[r_pad + 1, 2].legend()
-#     figh.suptitle(explabel, fontsize=14)
-#     figh.savefig(join(figdir, "%s_summary.png" % savestr))
-#     figh.savefig(join(figdir, "%s_summary.pdf" % savestr))
-#     if show:
-#         figh.show()
-#         return figh
-#     else:
-#         figh.close()
-#         return None
-import sys
+
 def summarize_tab(tab, verbose=False, file=sys.stdout):
     validmsk = ~((tab.Animal == "Alfa") & (tab.Expi == 10))
     if "reg_cc" in tab and "exp_var" in tab:

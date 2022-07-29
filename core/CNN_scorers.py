@@ -10,7 +10,7 @@ import torch
 from torchvision import models
 from torchvision import transforms
 import torch.nn.functional as F
-from layer_hook_utils import layername_dict, register_hook_by_module_names, get_module_names, named_apply
+from core.layer_hook_utils import layername_dict, register_hook_by_module_names
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -444,7 +444,7 @@ def visualize_trajectory(scores_all, generations, codes_arr=None, show=False, ti
     return figh
 
 
-from skimage.transform import rescale, resize
+from skimage.transform import resize, rescale
 def resize_and_pad(img_list, size, offset, canvas_size=(227, 227), scale=1.0):
     '''Resize and Pad a list of images to list of images
     Note this function is assuming the image is in (0,1) scale so padding with 0.5 as gray background.

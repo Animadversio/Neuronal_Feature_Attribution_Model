@@ -1,11 +1,12 @@
-import os
 import time
-import sys
+
 import numpy as np
+from numpy import sqrt, zeros, floor, log, log2, eye, exp, linspace, logspace, log10, mean, std
 from numpy.linalg import norm
 from numpy.random import randn
-from numpy import sqrt, zeros, abs, floor, log, log2, eye, exp, linspace, logspace, log10, mean, std
-from core.geometry_utils import ExpMap, VecTransport, radial_proj, orthogonalize, renormalize, ang_dist, SLERP
+
+from core.geometry_utils import ExpMap, renormalize, ang_dist, SLERP
+
 
 class CholeskyCMAES:
     """ Note this is a variant of CMAES Cholesky suitable for high dimensional optimization"""

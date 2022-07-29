@@ -1,20 +1,22 @@
 """Plotting Routine for CorrFeatTsr """
-import os
-from os.path import join
 import pickle as pkl
-from easydict import EasyDict
+from glob import glob
+from os.path import join
+
+import matplotlib.pylab as plt
 import numpy as np
-from tqdm import tqdm
+import numpy.ma as ma
 import pandas as pd
 import seaborn as sns
-import matplotlib.pylab as plt
-import numpy.ma as ma
+from easydict import EasyDict
 from scipy.stats import ttest_rel
-from core.featvis_lib import load_featnet, rectify_tsr
-from core.data_loader import mat_path, loadmat, load_score_mat
+from tqdm import tqdm
+
 from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
-from glob import glob
-import pickle as pkl
+from core.data_loader import mat_path, loadmat
+from core.featvis_lib import load_featnet, rectify_tsr
+
+
 def showimg(ax, imgarr, cbar=False, ylabel=None, title=None, clim=None):
     if clim is None:
         pcm = ax.imshow(imgarr)
@@ -450,7 +452,6 @@ for Animal, Expi in Explist[:]:
     figh.show()
 
 #%% FigureS4B Factor number comparison
-from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping
 from scipy.stats import spearmanr, f_oneway
 outdir = r"O:\Manuscript_Manifold\FigureS4B\Examples"
 

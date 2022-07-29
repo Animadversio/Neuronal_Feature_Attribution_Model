@@ -1,9 +1,8 @@
-import torch
-import torchvision
-import torch.nn as nn
-from torchvision import models
-from torchvision import transforms
 from collections import OrderedDict, defaultdict
+
+import torch
+import torch.nn as nn
+from torch.utils.hooks import RemovableHandle
 
 
 def get_layer_names(model):
@@ -232,7 +231,6 @@ def register_hook_by_module_names(target_name, target_hook, model, input_size=(3
     return target_hook_h, module_names, module_types
 
 #  Utility code to fetch activation
-from torch.utils.hooks import RemovableHandle
 class featureFetcher:
     """ Light weighted modular feature fetcher
     It simply record the activation of the target layer as images pass through it.

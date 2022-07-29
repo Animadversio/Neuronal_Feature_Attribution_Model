@@ -1,27 +1,17 @@
 """Post hoc analysis and summary for the CorrFeatTsr analysis"""
-import os
-from os.path import join
-from glob import glob
 import re
+from glob import glob
+from os.path import join
 from shutil import copyfile
-import numpy as np
-import numpy.ma as ma
-import pickle as pkl
-from easydict import EasyDict
-import pandas as pd
-from scipy.stats import ttest_rel, ttest_ind, pearsonr
-from scipy.stats import f_oneway
-from scipy.stats import pearsonr, spearmanr
-import torch
-import seaborn as sns
+
 import matplotlib as mpl
 import matplotlib.pylab as plt
-from core.data_loader import mat_path, loadmat, load_score_mat
-from core.GAN_utils import upconvGAN
-from core.featvis_lib import load_featnet, rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
-    vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
-    CorrFeatScore, preprocess, show_img, pad_factor_prod
-from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, loadimg_preprocess, score_images
+import numpy as np
+import numpy.ma as ma
+import pandas as pd
+import seaborn as sns
+from scipy.stats import f_oneway, spearmanr, ttest_rel
+
 mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.spines.top'] = False
 #%%
@@ -44,6 +34,7 @@ def testProgression(tab, varnm, msk=None):
     cval, pval = spearmanr(tab[varnm][validmsk], tab["area"].apply(areanummap)[validmsk])
     return cval, pval
 
+
 def area_cmp_plot(tab, varnm, targspace="all", tablab="", msk=None, inner="points", figdir=""):
     if msk is None:
         msk = ~((tab.Animal == "Alfa") & (tab.Expi == 10))
@@ -57,6 +48,7 @@ def area_cmp_plot(tab, varnm, targspace="all", tablab="", msk=None, inner="point
     plt.savefig(join(figdir,"%s_model_%s_area_cmp.png"%(varnm, tablab)))
     plt.savefig(join(figdir,"%s_model_%s_area_cmp.png"%(varnm, tablab)))
     plt.show()
+
 
 def pred_cmp_scatter(tab1, tab2, explab1, explab2, varnm="cc_bef", colorvar="area", stylevar="Animal", masktab=None, mask=None):
     """Compare prediction score for 2 models

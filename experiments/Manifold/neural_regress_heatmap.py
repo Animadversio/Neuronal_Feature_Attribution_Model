@@ -1,41 +1,31 @@
 import os
-from os.path import join
-import torch
-import torchvision.models as models
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
 import pickle as pkl
+from os.path import join
+
 import matplotlib.pylab as plt
+import torch
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.decomposition import PCA
-from core.featvis_lib import load_featnet
-from core.dataset_utils import ImagePathDataset, DataLoader
+from sklearn.model_selection import GridSearchCV
+import matplotlib
+import seaborn as sns
+from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
+    LinearRegression_torch, PLS_torch, SpatialAvg_torch
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
-import matplotlib
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
 print(matplotlib.get_backend())
 matplotlib.use('Agg')
 # matplotlib.use('module://backend_interagg')
 #%%
-from core.neural_regress.regress_lib import calc_features, \
-        calc_reduce_features, sweep_regressors, evaluate_prediction, \
-        merge_dict_arrays, merge_arrays, evaluate_dict
-from scipy.stats import pearsonr, spearmanr
 featlayer = '.layer3.Bottleneck5'
 data = pkl.load(open(join(saveroot, f"{featlayer}_regress_Xtransforms.pkl"), "rb"))
 srp = data["srp"]
 pca = data["pca"]
 #%%
-import seaborn as sns
-from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
-from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
-    LinearRegression_torch, PLS_torch, SpatialAvg_torch
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_vis"
 tsrshapes = {'.layer2.Bottleneck3':(512, 29, 29),

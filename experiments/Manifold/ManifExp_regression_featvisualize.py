@@ -4,31 +4,28 @@
  * visualize the model by back propagation.
  * Sumarize the images.
 """
-
-#%% Newer version pipeline
+# %% Newer version pipeline
 import os
-
-import matplotlib.pyplot as plt
-from sklearn.random_projection import johnson_lindenstrauss_min_dim, \
-            SparseRandomProjection, GaussianRandomProjection
-from sklearn.linear_model import LogisticRegression, LinearRegression, \
-    Ridge, Lasso, PoissonRegressor, RidgeCV, LassoCV
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.decomposition import PCA
-from core.featvis_lib import load_featnet
 import pickle as pkl
 from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.decomposition import PCA
+from sklearn.model_selection import GridSearchCV
+from sklearn.random_projection import SparseRandomProjection
+
+from core.featvis_lib import load_featnet
 from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
+
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
 from core.GAN_utils import upconvGAN
 from core.layer_hook_utils import featureFetcher
-from core.plot_utils import show_imgrid, save_imgrid
+from core.plot_utils import save_imgrid
 from core.montage_utils import crop_from_montage, make_grid_np
 import torch.nn.functional as F
 from torch.optim import Adam
@@ -162,7 +159,7 @@ Xtfmmat = torch.sparse.LongTensor(
 
 #%% Define torch based modules to back propagate, moved to sklearn_torchify_lib
 from sklearn.linear_model._base import LinearModel
-from typing import List, Union
+from typing import Union
 class SRP_torch(torch.nn.Module):
     def __init__(self, srp: SparseRandomProjection):
         super(SRP_torch, self).__init__()

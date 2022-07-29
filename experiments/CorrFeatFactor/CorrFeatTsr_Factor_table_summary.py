@@ -1,18 +1,11 @@
 """Output tables for the paper for CorrFeatTsr """
-import os
-from os.path import join
-from glob import glob
 import pickle as pkl
-from easydict import EasyDict
-from tqdm import tqdm
-import numpy as np
+from glob import glob
+from os.path import join
+
 import pandas as pd
-import seaborn as sns
-import matplotlib.pylab as plt
-import numpy.ma as ma
-from scipy.stats import ttest_rel
-from core.featvis_lib import load_featnet, rectify_tsr
-from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
+from easydict import EasyDict
+
 modelroot = r"E:\OneDrive - Washington University in St. Louis\corrFeatTsr_FactorVis\models"
 #%% Calculate the sparseness ratio and the corresponding correlation value.
 # rect_mode = "Tthresh"; thresh = (None, 3)

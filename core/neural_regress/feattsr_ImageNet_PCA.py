@@ -2,10 +2,11 @@
 Use ImageNet validation set to obtain features to train PCA and sparse random projection.
 Then use PCA and sparse random projection to do neuron prediction.
 """
-from torch.utils.data import Subset, SubsetRandomSampler
-from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
-from core.neural_regress.regress_lib import calc_features, calc_reduce_features, featureFetcher, tqdm, torch, np
+from torch.utils.data import Subset
+
+from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 from core.featvis_lib import load_featnet
+from core.neural_regress.regress_lib import featureFetcher, tqdm, torch, np
 
 
 def calc_features_in_dataset(dataset, net, featlayer, idx_range=None,
@@ -55,7 +56,8 @@ pca = PCA(n_components=1000)
 pca.fit(feattsr_all.reshape(feattsr_all.shape[0], -1))
 #%%
 from sklearn.random_projection import johnson_lindenstrauss_min_dim, \
-            SparseRandomProjection, GaussianRandomProjection
+            SparseRandomProjection
+
 n_components_ = johnson_lindenstrauss_min_dim(n_samples=3000, eps=0.1) # len(score_vect)
 srp = SparseRandomProjection(n_components=n_components_, random_state=0)
 srp.fit(np.zeros((1, np.prod(feattsr_all.shape[1:]))))

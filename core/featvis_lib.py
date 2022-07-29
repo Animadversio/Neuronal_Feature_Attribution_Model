@@ -2,21 +2,23 @@
 Specifically, it provides functions that visualize a feature vector / tensor in a given layer of CNN
 """
 import os
-from sys import platform
 from os.path import join
-import numpy as np
-from easydict import EasyDict
-from sklearn.decomposition import NMF
-import torch
-from torch import nn
-from torchvision.transforms import ToPILImage
-from numpy.linalg import norm as npnorm
-from core.data_loader import mat_path, load_score_mat, loadmat
-from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore, corr_GAN_visualize, corr_visualize, preprocess, save_imgtsr
-from core.GAN_utils import upconvGAN
-from core.CNN_scorers import load_featnet
+
 import matplotlib as mpl
 import matplotlib.pylab as plt
+import numpy as np
+import torch
+from easydict import EasyDict
+from numpy.linalg import norm as npnorm
+from sklearn.decomposition import NMF
+from torch import nn
+from torchvision.transforms import ToPILImage
+
+from core.CNN_scorers import load_featnet
+from core.CorrFeatFactor.CorrFeatTsr_visualize_lib import CorrFeatScore, corr_GAN_visualize, corr_visualize, preprocess
+from core.GAN_utils import upconvGAN
+from core.data_loader import mat_path, loadmat
+
 mpl.rcParams['pdf.fonttype'] = 42
 
 

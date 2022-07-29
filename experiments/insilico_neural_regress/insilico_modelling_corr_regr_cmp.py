@@ -413,7 +413,7 @@ gradAmpmap_srp = grad_population_RF_estimate(scorer.model, ".layer3.Bottleneck5"
 #%%
 # titlestr = f"{Animal}-Exp{Expi:02d}-{featlayer}-{Xtype}-{regressor}"
 fig, axs = plt.subplots(1, 2, figsize=(8, 4.5))
-sns.heatmap(Wtsr.mean(axis=0), ax=axs[r0], )
+sns.heatmap(Wtsr.mean(axis=0), ax=axs[0], )
 axs[0].axis("equal")
 axs[0].set_title("mean weight")
 sns.heatmap(np.abs(Wtsr).mean(axis=0), ax=axs[1], )

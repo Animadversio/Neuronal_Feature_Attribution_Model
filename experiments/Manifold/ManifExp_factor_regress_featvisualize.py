@@ -1,30 +1,24 @@
 import os
-
-import matplotlib.pyplot as plt
-from sklearn.pipeline import make_pipeline
-from sklearn.random_projection import johnson_lindenstrauss_min_dim, \
-            SparseRandomProjection, GaussianRandomProjection
-from sklearn.linear_model import LogisticRegression, LinearRegression, \
-    Ridge, Lasso, PoissonRegressor, RidgeCV, LassoCV
-from sklearn.cross_decomposition import PLSRegression
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.decomposition import PCA
-from core.featvis_lib import load_featnet
-from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 import pickle as pkl
 from os.path import join
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
-    LinearRegression_torch, PLS_torch, SpatialAvg_torch
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.model_selection import GridSearchCV
+
+from core.featvis_lib import load_featnet
+from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.neural_regress.sklearn_torchify_lib import LinearRegression_torch, PLS_torch
+
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 #%%
 from core.GAN_utils import upconvGAN
 from core.layer_hook_utils import featureFetcher
 import torch.nn.functional as F
 from torch.optim import Adam
-from core.plot_utils import show_imgrid, save_imgrid
+from core.plot_utils import save_imgrid
 
 
 def load_covtsrs(Animal, Expi, layer, ):

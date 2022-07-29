@@ -6,6 +6,15 @@ from numpy.linalg import norm
 from numpy import sqrt
 import torch
 
+
+def ang_dist(V1, V2):
+    nV1 = V1 / norm(V1, axis=1, keepdims=True)
+    nV2 = V2 / norm(V2, axis=1, keepdims=True)
+    cosang = nV1 @ nV2.T
+    ang = np.real(np.arccos(cosang))
+    return ang
+
+
 # Utility functions for interpolation
 def SLERP(code1, code2, steps, lim=(0,1)):
     """Spherical Linear Interpolation for numpy arrays"""

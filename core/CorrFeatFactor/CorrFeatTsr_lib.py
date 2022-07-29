@@ -327,7 +327,7 @@ def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, Exp
 
 #%%
 import torch.nn.functional as F
-from torchvision import models, transforms
+from torchvision import transforms
 from skimage.io import imread
 from kornia.filters import median_blur, gaussian_blur2d
 
