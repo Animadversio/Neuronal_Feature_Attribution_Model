@@ -50,7 +50,7 @@ def load_NMF_factors(Animal, Expi, layer, NF=3):
 """
 Recovery using the weights tensor L2 norm abs of sum
 """
-from stats_utils import saveallforms
+from core.plot_utils import saveallforms
 fitroot = r'E:\OneDrive - Harvard University\Manifold_NeuralRegress'
 outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_attrb_mask"
 

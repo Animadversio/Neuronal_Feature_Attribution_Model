@@ -1,5 +1,4 @@
 import torch
-import torchvision.models as models
 import numpy as np
 import pandas as pd
 import pickle as pkl
@@ -9,12 +8,11 @@ import matplotlib.pylab as plt
 from core.GAN_utils import upconvGAN
 from core.featvis_lib import load_featnet
 from core.layer_hook_utils import featureFetcher
-from insilico_Exp_torch import TorchScorer
-from ZO_HessAware_Optimizers import CholeskyCMAES
-from core.layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
+from core.insilico_Exp_torch import TorchScorer
+from core.Optimizers import CholeskyCMAES
 from collections import defaultdict
 from core.neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
-    resizer, normalizer, denormalizer, PoissonRegressor, RidgeCV, Ridge, KernelRidge
+    resizer, normalizer, PoissonRegressor, Ridge, KernelRidge
 #%% Prepare CNN, GAN players
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
@@ -36,8 +34,7 @@ Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], 
 Xfeat_transformer = {"sp_rf": lambda tsr: tsr[:, :, 6, 6].copy(),
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
 #%%
-from core.plot_utils import show_imgrid
-from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
+from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 
 dataset = create_imagenet_valid_dataset(imgpix=227, normalize=True)
 data_loader = DataLoader(dataset, batch_size=100,

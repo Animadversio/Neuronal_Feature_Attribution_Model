@@ -1,9 +1,11 @@
-from collections import OrderedDict, defaultdict
 import torch
 import torchvision
 import torch.nn as nn
 from torchvision import models
 from torchvision import transforms
+from collections import OrderedDict, defaultdict
+
+
 def get_layer_names(model):
     layername = []
     conv_cnt = 0
@@ -68,7 +70,7 @@ layername_dict ={"alexnet":["conv1", "conv1_relu", "pool1",
                                  'fc1']}
 
 
-#%% Hooks based methods to get layer and module names
+# Hooks based methods to get layer and module names
 def named_apply(model, name, func, prefix=None):
     # resemble the apply function but suits the functions here.
     cprefix = "" if prefix is None else prefix + "." + name
@@ -229,7 +231,7 @@ def register_hook_by_module_names(target_name, target_hook, model, input_size=(3
         raise ValueError("Cannot hook the layer with the name %s\nAvailable names are listed here"%target_name)
     return target_hook_h, module_names, module_types
 
-#%% Utility code to fetch activation
+#  Utility code to fetch activation
 from torch.utils.hooks import RemovableHandle
 class featureFetcher:
     """ Light weighted modular feature fetcher
@@ -292,6 +294,7 @@ class featureFetcher:
         #         elif len(output.shape) == 2:
         #             self.activations[name] = output.detach()[:, unit[0]]
         return hook
+
 
 class featureFetcher_recurrent:
     """ Light weighted modular feature fetcher, simpler than TorchScorer.

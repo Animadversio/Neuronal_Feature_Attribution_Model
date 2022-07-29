@@ -1,3 +1,4 @@
+"""Utilities to export large number of figures to formated pptx files"""
 import pptx
 from pptx import Presentation
 from pptx.util import Inches, Length, Pt

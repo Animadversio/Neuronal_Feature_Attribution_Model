@@ -11,13 +11,12 @@ from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
 from core.GAN_utils import upconvGAN
-from insilico_Exp_torch import TorchScorer
-from ZO_HessAware_Optimizers import CholeskyCMAES
+from core.insilico_Exp_torch import TorchScorer
+from core.Optimizers import CholeskyCMAES
 from core.featvis_lib import load_featnet
-from core.layer_hook_utils import featureFetcher, get_module_names, register_hook_by_module_names, layername_dict
-from collections import defaultdict
+from core.layer_hook_utils import featureFetcher
 import pickle as pkl
-from core.featvis_lib import tsr_posneg_factorize, tsr_factorize
+from core.featvis_lib import tsr_posneg_factorize
 import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
@@ -28,7 +27,7 @@ import seaborn as sns
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader, Subset
 from core.neural_regress.regress_lib import calc_reduce_features_dataset,\
     evaluate_prediction, sweep_regressors, Ridge, Lasso
-from core.grad_RF_estim import grad_RF_estimate, gradmap2RF_square, fit_2dgauss
+from core.grad_RF_estim import grad_RF_estimate, fit_2dgauss
 from core.grad_RF_estim import grad_population_RF_estimate
 from scipy.stats import pearsonr, spearmanr
 def estimate_RF_for_fit_models(fit_models, targetlayer, Hmaps, ccfactor, savedir,
@@ -147,7 +146,7 @@ targetunit = (10, 3, 3)
 #%%
 matplotlib.use("Agg") # 'module://backend_interagg'
 #%%
-from core.plot_utils import show_imgrid, save_imgrid
+from core.plot_utils import save_imgrid
 from core.grad_RF_estim import GAN_grad_RF_estimate
 for (targetunit, targetlayer) in [
                                   # ((10, 9, 9), ".layer3.Bottleneck5"),

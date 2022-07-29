@@ -303,7 +303,7 @@ def visualize_cctsr_embed(featFetcher, layers2plot, ReprStats, Expi, Animal, Exp
                 border = round(imgpix * 0.05)
                 msk = np.ones([imgpix - 2 * border, imgpix - 2 * border])
                 msk = np.pad(msk, [(padbef + border, padaft + border), (padbef + border, padaft + border)], 'constant', constant_values=0)
-                blurmsk = (msk < 0.5).reshape([fullimgsz, fullimgsz,1]);
+                blurmsk = (msk < 0.5).reshape([fullimgsz, fullimgsz,1])
                 blurmsk_trans = gaussian(blurmsk, 3, mode='reflect')
                 # bkgrd_img = gaussian(proto_rsz_pad * blurmsk, (3, 3), mode='reflect')
                 brdblur_proto = background * blurmsk_trans + proto_rsz_pad * (1-blurmsk_trans)
@@ -364,7 +364,7 @@ def loadimg_preprocess(imgfullpath, imgpix=120, fullimgsz=224, borderblur=False)
         bkgrd_tsr = 0.5 * torch.ones([1, 3, fullimgsz, fullimgsz])
         msk = torch.ones([fullimgsz - 2 * border, fullimgsz - 2 * border])
         msk = F.pad(msk, [border, border, border, border], mode="constant", value=0)
-        blurmsk = (1 - msk).reshape([1, 1, fullimgsz, fullimgsz]);
+        blurmsk = (1 - msk).reshape([1, 1, fullimgsz, fullimgsz])
         blurmsk_trans = gaussian_blur2d(blurmsk, (5, 5), sigma=(3.0, 3.0))
         # bkgrdtsr = gaussian_blur2d(input_tsr*blurmsk, (5, 5), sigma=(3, 3))
         final_tsr = bkgrd_tsr * blurmsk_trans + input_tsr * (1 - blurmsk_trans)
@@ -402,7 +402,7 @@ def loadimg_embed_preprocess(imgfullpath, imgpix=120, fullimgsz=224, borderblur=
         bkgrd_tsr = torch.ones([1,3,fullimgsz,fullimgsz])
         msk = torch.ones([imgpix-2*border, imgpix-2*border])
         msk = F.pad(msk, [padbef+border, padaft+border, padbef+border, padaft+border], mode="constant", value=0.5)
-        blurmsk = (1-msk).reshape([1,1,fullimgsz,fullimgsz]);
+        blurmsk = (1-msk).reshape([1,1,fullimgsz,fullimgsz])
         blurmsk_trans = gaussian_blur2d(blurmsk, (5,5), sigma=(3, 3))
         # bkgrdtsr = gaussian_blur2d(input_tsr*blurmsk, (5, 5), sigma=(3, 3))
         final_tsr = bkgrd_tsr*blurmsk_trans + input_tsr*(1 - blurmsk_trans)

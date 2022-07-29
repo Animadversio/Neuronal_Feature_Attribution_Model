@@ -393,7 +393,7 @@ if __name__ == "__main__":
     EStats = loadmat(join(mat_path, Animal + "_Evol_stats.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
     ReprStats = loadmat(join(mat_path, Animal + "_ImageRepr.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
     # %% Final Batch Processing of all Exp.
-    figdir = r"S:\corrFeatTsr\VGG_featvis";
+    figdir = r"S:\corrFeatTsr\VGG_featvis"
     Animal = "Alfa"; Expi = 3
     for Animal in ["Alfa",]: # "Beto"
         for Expi in range(27,46+1):

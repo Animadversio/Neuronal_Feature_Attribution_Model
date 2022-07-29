@@ -55,7 +55,7 @@ modelroot = r"E:\OneDrive - Washington University in St. Louis\corrFeatTsr_Facto
 #%% Text report: Calculate the sparseness ratio and the corresponding correlation value.
 rect_mode = "Tthresh"; thresh = (None, 3)
 netname = "resnet50_linf8";layer = "layer3";exp_suffix = "_nobdr_res-robust"
-bdr = 1;
+bdr = 1
 S_col = []
 for Animal in ["Alfa", "Beto"]:
     MStats = loadmat(join(mat_path, Animal + "_Manif_stats.mat"), struct_as_record=False, squeeze_me=True)['Stats']
@@ -318,7 +318,7 @@ Fullmodstr = "resnet50_linf8-layer3_Full_bdr1_Tthresh_3__nobdr_res-robust_CV"
 NFdir = join(modelroot, NFmodstr)
 Fulldir = join(modelroot, Fullmodstr)
 netname = "resnet50_linf8"; layer = "layer3"; exp_suffix="_nobdr_res-robust"; rect_mode = "Tthresh"; thr = (None, 3); bdr = 1
-featvis_mode = "corr"; 
+featvis_mode = "corr"
 featnet, net = load_featnet(netname)
 for Animal, Expi in ExpAll[:]:#Explist[:]:
     ReprStats = ReprStats_col[Animal]

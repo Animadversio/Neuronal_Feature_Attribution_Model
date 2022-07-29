@@ -1,16 +1,14 @@
 import torch
-import torchvision.models as fit_models
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
 from core.GAN_utils import upconvGAN
-from insilico_Exp_torch import TorchScorer
-from ZO_HessAware_Optimizers import CholeskyCMAES
+from core.insilico_Exp_torch import TorchScorer
+from core.Optimizers import CholeskyCMAES
 from core.featvis_lib import load_featnet
 from core.layer_hook_utils import featureFetcher
-from core.layer_hook_utils import get_module_names, register_hook_by_module_names, layername_dict
 from collections import defaultdict
 
 import matplotlib
@@ -56,19 +54,15 @@ for i in pbar:
 resp_all = np.concatenate(resp_all, axis=0)
 feattsr_all = np.concatenate(feattsr_all, axis=0)
 #%% Linear Modelling imports
-from sklearn.pipeline import make_pipeline
-from sklearn.random_projection import johnson_lindenstrauss_min_dim, \
-            SparseRandomProjection, GaussianRandomProjection
-from sklearn.linear_model import LogisticRegression, LinearRegression, \
-    Ridge, Lasso, PoissonRegressor, RidgeCV, LassoCV
-from sklearn.cross_decomposition import PLSRegression
+from sklearn.random_projection import SparseRandomProjection
+from sklearn.linear_model import Ridge, PoissonRegressor
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
-from torchvision.transforms import ToPILImage, ToTensor, Normalize, Resize
+from torchvision.transforms import Normalize, Resize
 from core.plot_utils import show_imgrid
-from core.dataset_utils import create_imagenet_valid_dataset, Dataset, DataLoader
+from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 
 denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
                          std=[1/0.229, 1/0.224, 1/0.225])
