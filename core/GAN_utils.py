@@ -197,3 +197,52 @@ class multiZupconvGAN(nn.Module):
         return torch.clamp(raw + RGB_mean.to(raw.device), 0, 255.0) / 255.0 * scale
 
 
+def loadBigGAN(version="biggan-deep-256"):
+    from pytorch_pretrained_biggan import BigGAN, truncated_noise_sample, BigGANConfig
+    if platform == "linux":
+        cache_path = "/scratch/binxu/torch/"
+        cfg = BigGANConfig.from_json_file(join(cache_path, "%s-config.json" % version))
+        BGAN = BigGAN(cfg)
+        BGAN.load_state_dict(torch.load(join(cache_path, "%s-pytorch_model.bin" % version)))
+    else:
+        BGAN = BigGAN.from_pretrained(version)
+    for param in BGAN.parameters():
+        param.requires_grad_(False)
+    # embed_mat = BGAN.embeddings.parameters().__next__().data
+    BGAN.cuda()
+    return BGAN
+
+
+class BigGAN_wrapper(): #nn.Module
+    def __init__(self, BigGAN, ):
+        self.BigGAN = BigGAN
+
+    def sample_vector(self, sampn=1, class_id=None, device="cuda"):
+        if class_id is None:
+            refvec = torch.cat((0.7 * torch.randn(128, sampn).to(device),
+                                self.BigGAN.embeddings.weight[:, torch.randint(1000, size=(sampn,))].to(device),)).T
+        else:
+            refvec = torch.cat((0.7 * torch.randn(128, sampn).to(device),
+                                self.BigGAN.embeddings.weight[:, (class_id*torch.ones(sampn)).long()].to(device),)).T
+        return refvec
+
+    def visualize(self, code, scale=1.0, truncation=0.7):
+        imgs = self.BigGAN.generator(code, truncation)  # Matlab version default to 0.7
+        return torch.clamp((imgs + 1.0) / 2.0, 0, 1) * scale
+
+    def visualize_batch_np(self, codes_all_arr, truncation=0.7, B=15, ):
+        csr = 0
+        img_all = None
+        imgn = codes_all_arr.shape[0]
+        with torch.no_grad():
+            while csr < imgn:
+                csr_end = min(csr + B, imgn)
+                code_batch = torch.from_numpy(codes_all_arr[csr:csr_end, :]).float().cuda()
+                img_list = self.visualize(code_batch, truncation=truncation, ).cpu()
+                img_all = img_list if img_all is None else torch.cat((img_all, img_list), dim=0)
+                csr = csr_end
+        return img_all
+
+    def render(self, codes_all_arr, truncation=0.7, B=15):
+        img_tsr = self.visualize_batch_np(codes_all_arr, truncation=truncation, B=B)
+        return [img.permute([1,2,0]).numpy() for img in img_tsr]

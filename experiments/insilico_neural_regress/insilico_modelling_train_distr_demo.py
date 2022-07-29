@@ -1,3 +1,13 @@
+"""Test the effect of training set image (distribution) on the effect of the model performance
+
+Training set
+
+* FC6GAN evolution
+* FC6GAN re-evolution
+* ImageNet validation
+* BigGAN Evolution
+* BigGAN random
+"""
 import torch
 import numpy as np
 import pandas as pd
@@ -6,13 +16,14 @@ from tqdm import tqdm
 from os.path import join
 import matplotlib.pylab as plt
 from collections import defaultdict
+
 from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
 from core.layer_hook_utils import featureFetcher
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 from core.neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
-    resizer, normalizer, PoissonRegressor, Ridge, KernelRidge
+    train_test_split, PoissonRegressor, Ridge, KernelRidge, resizer, normalizer
 #%% Prepare CNN, GAN players
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
@@ -25,22 +36,21 @@ featnet, net = load_featnet("resnet50_linf8")
 featFetcher = featureFetcher(featnet, input_size=(3, 227, 227),
                              device="cuda", print_module=False)
 featFetcher.record(regresslayer,)
-#%%
+#%% Load and define the X feature transformations
+Xtfm_dir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
+
+data = pkl.load(open(join(Xtfm_dir, f"{regresslayer}_regress_Xtransforms.pkl"),"rb"))
+srp = data["srp"]
+pca = data["pca"]
 Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], -1)),
                      "srp": lambda tsr: srp.transform(tsr.reshape(tsr.shape[0], -1)),
                      "sp_rf": lambda tsr: tsr[:, :, 6, 6],
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
-#%%
-Xfeat_transformer = {"sp_rf": lambda tsr: tsr[:, :, 6, 6].copy(),
-                     "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
-#%%
-
+#%% Load ImageNet dataset
 dataset = create_imagenet_valid_dataset(imgpix=227, normalize=True)
 data_loader = DataLoader(dataset, batch_size=100,
               shuffle=False, num_workers=8)
 #%%
-# ipca = IncrementalPCA(n_components=1000, batch_size=100)
-# srp = SparseRandomProjection(n_components=1000, ).fit(np.random.rand(10, 1024 * 15 * 15))
 target_scores_natval = []
 Xfeat_dict = defaultdict(list)
 for i, (imgs, _) in tqdm(enumerate(data_loader)):
@@ -57,7 +67,6 @@ for i, (imgs, _) in tqdm(enumerate(data_loader)):
     Xfeat_dict["sp_rf"].append(feattsr[:, :, 6, 6].copy())
     Xfeat_dict["sp_avg"].append(feattsr.mean(axis=(2, 3)))
     # Xfeat_dict["srp"].append(srp.transform(feattsr.reshape(feattsr.shape[0], -1)))
-    # ipca.partial_fit(feattsr.reshape(feattsr.shape[0], -1))
     if i >= 150:
         break
 #%%
@@ -93,6 +102,7 @@ savedir = r'E:\OneDrive - Harvard University\CNN_neural_regression\insilico_resu
 compare_activation_prediction(target_scores_train, pred_scores_train, "ImageNet_train", savedir=savedir)
 compare_activation_prediction(target_scores_test, pred_scores_test, "ImageNet_test", savedir=savedir)
 #%%
+""" FC6 GAN random images """
 model_list = [('pca', "Ridge"), ('srp', "Ridge"), ('sp_avg', "Ridge"),
               ('sp_rf', "Ridge"), ('sp_rf', "KernelRBF")]
 target_scores_gan = []
@@ -148,6 +158,7 @@ compare_activation_prediction(target_scores_gan, pred_scores_gan,
                               "GAN-random", savedir=savedir)
 
 #%%
+""" FC6 GAN re-evolution trajectory """
 target_scores_reevol = []
 pred_scores_reevol = defaultdict(list)
 
@@ -182,6 +193,7 @@ from core.GAN_utils import BigGAN_wrapper, loadBigGAN
 BGAN = loadBigGAN().cpu().eval()
 BG = BigGAN_wrapper(BGAN)
 #%%
+""" BigGAN evolution trajectory """
 target_scores_BigGANevol = []
 pred_scores_BigGANevol = defaultdict(list)
 
@@ -214,12 +226,10 @@ compare_activation_prediction(target_scores_BigGANevol, pred_scores_BigGANevol,
 #%%
 df_ImageNet_train = compare_activation_prediction(target_scores_train, pred_scores_train, "ImageNet_train", savedir=savedir)
 df_ImageNet_test  = compare_activation_prediction(target_scores_test, pred_scores_test, "ImageNet_test", savedir=savedir)
-df_ganrand = compare_activation_prediction(target_scores_gan, pred_scores_gan,
-                              "GAN-random", savedir=savedir)
-df_reevol = compare_activation_prediction(target_scores_reevol, pred_scores_reevol,
-                              "Reevolution-SameUnit", savedir=savedir)
-df_BigGANevol = compare_activation_prediction(target_scores_BigGANevol, pred_scores_BigGANevol,
-                              "BigGANevol-SameUnit", savedir=savedir)
+df_ganrand = compare_activation_prediction(target_scores_gan, pred_scores_gan, "GAN-random", savedir=savedir)
+df_reevol = compare_activation_prediction(target_scores_reevol, pred_scores_reevol, "Reevolution-SameUnit", savedir=savedir)
+df_BigGANevol = compare_activation_prediction(target_scores_BigGANevol, pred_scores_BigGANevol, "BigGANevol-SameUnit", savedir=savedir)
+
 #%%
 df_synopsis = pd.concat([df_ImageNet_train, df_ImageNet_test,
                          df_ganrand, df_reevol, df_BigGANevol], axis=0)

@@ -1,3 +1,4 @@
+"""A demo of in silico modelling experiment"""
 import torch
 import numpy as np
 import pandas as pd
@@ -6,25 +7,27 @@ import pickle as pkl
 from os.path import join
 import matplotlib
 import matplotlib.pylab as plt
+from collections import defaultdict
+
 from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
 from core.layer_hook_utils import featureFetcher
-from collections import defaultdict
 
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 #%%
+# GAN model
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
-# scorer = TorchScorer("resnet50")
-# module_names, module_types, module_spec = get_module_names(scorer.model, input_size=(3, 227, 227), device="cuda");
 #%%
 # Target neuron network
 scorer = TorchScorer("resnet50")
 scorer.select_unit(("resnet50", ".layer3.Bottleneck5", 5, 6, 6), allow_grad=True)
+# module_names, module_types, module_spec = get_module_names(scorer.model, input_size=(3, 227, 227), device="cuda");
 #%%
+# Base CNN for regression
 regresslayer = ".layer3.Bottleneck5"
 featnet, net = load_featnet("resnet50_linf8")
 featFetcher = featureFetcher(featnet, input_size=(3, 227, 227),
@@ -53,6 +56,7 @@ for i in pbar:
 
 resp_all = np.concatenate(resp_all, axis=0)
 feattsr_all = np.concatenate(feattsr_all, axis=0)
+
 #%% Linear Modelling imports
 from sklearn.random_projection import SparseRandomProjection
 from sklearn.linear_model import Ridge, PoissonRegressor
@@ -61,18 +65,20 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
 from torchvision.transforms import Normalize, Resize
+
 from core.plot_utils import show_imgrid
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 from core.neural_regress.regress_lib import sweep_regressors, compare_activation_prediction
+
+
 denormalizer = Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225],
                          std=[1/0.229, 1/0.224, 1/0.225])
 normalizer = Normalize(mean=[0.485, 0.456, 0.406],
                        std=[0.229, 0.224, 0.225])
 resizer = Resize(227, )
-
-
 #%% Prepare image features and feature tfms for modelling
 featmat = feattsr_all.reshape(feattsr_all.shape[0], -1)  # B x (C*H*W)
+
 featmat_avg = feattsr_all.mean(axis=(2, 3))  # B x C
 featmat_rf = feattsr_all[:, :, 6, 6]  # B x n_components
 srp = SparseRandomProjection().fit(featmat)
@@ -86,7 +92,7 @@ Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], 
                      "srp": lambda tsr: srp.transform(tsr.reshape(tsr.shape[0], -1)),
                      "sp_rf": lambda tsr: tsr[:, :, 6, 6],
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
-#%%
+#%% Prepare the regressors for doing the regression from X features
 ridge = Ridge(alpha=1.0)
 poissreg = PoissonRegressor(alpha=1.0, max_iter=500)
 kr_rbf = KernelRidge(alpha=1.0, kernel="rbf", gamma=None, )
@@ -98,7 +104,7 @@ y_all = resp_all
 result_df, fit_models = sweep_regressors(Xdict, y_all, regressors, regressor_names, )
 result_df.to_csv(join(dataroot, "insilico_results\\sweep_regressors.csv"))
 #%%
-result_df, fit_models = sweep_regressors(Xdict, y_all, [ridge, kr_rbf], ["Ridge","KernelRBF"],)
+result_df, fit_models = sweep_regressors(Xdict, y_all, [ridge, kr_rbf], ["Ridge", "KernelRBF"],)
 result_df.to_csv(join(dataroot, "insilico_results\\sweep_regressors_sub.csv"))
 #%%
 """Predict Scores for Evolution images"""

@@ -72,6 +72,9 @@ def IoU(mask1, mask2):
 
 
 def summarize_rf_cmp(gradAmpmap, fitdict, gradmap_dict, expstr, expdir=None):
+    """plot the RF of different models as a subplot grid.
+    with three versions, contour plot (ground truth + model); raw gradient map; Gaussian fit gradient map
+    """
     regressor_names = ["Ridge", "Lasso"]
     featredlist = ["spmask3", "featvec3", "factor3", "pca", "srp"]
     df_col = ["regressor", "featred", "cval", "pval", "cval_fit", "pval_fit", "iou"]
@@ -130,12 +133,13 @@ targetlayer = ".layer3.Bottleneck5"
 targetunit = (10, 3, 3) #(5, 6, 6)
 scorer = TorchScorer("resnet50")
 scorer.select_unit(("resnet50", targetlayer, *targetunit), allow_grad=True)
+# Base (regressor) neural network
 regresslayer = ".layer3.Bottleneck5"
 featnet, net = load_featnet("resnet50_linf8")
 featFetcher = featureFetcher(featnet, input_size=(3, 227, 227),
                              device="cuda", print_module=False)
 featFetcher.record(regresslayer,)
-#%%
+#%% Load the feature transformations
 Xtfm_dir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
 data = pkl.load(open(join(Xtfm_dir, f"{regresslayer}_regress_Xtransforms.pkl"),"rb"))
 srp = data["srp"]
@@ -144,8 +148,6 @@ pca = data["pca"]
 outdir = join(dataroot, r"insilico_final\resnet50_linf8-resnet50")
 sumdir = join(outdir, "summary")
 os.makedirs(outdir, exist_ok=True)
-targetlayer = ".layer3.Bottleneck5"
-targetunit = (10, 3, 3)
 #%%
 mpl.use("Agg") # 'module://backend_interagg'
 #%%
