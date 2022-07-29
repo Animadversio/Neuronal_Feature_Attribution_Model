@@ -19,6 +19,9 @@ from skimage.transform import resize
 from torchvision import models, transforms
 from torchvision.transforms import ToPILImage
 from tqdm import tqdm
+from torch.optim import SGD, Adam
+from torchvision.utils import make_grid
+from core.GAN_utils import upconvGAN
 
 layername_dict={"alexnet":["conv1", "conv1_relu", "pool1",
                             "conv2", "conv2_relu", "pool2",
@@ -229,9 +232,6 @@ class CorrFeatScore:
         print('Feature Correlator Destructed, Hooks deleted.')
 
 #%%
-from torch.optim import SGD, Adam
-from torchvision.utils import make_grid
-from core.GAN_utils import upconvGAN
 RGBmean = torch.tensor([0.485, 0.456, 0.406]).float().reshape([1,3,1,1])
 RGBstd = torch.tensor([0.229, 0.224, 0.225]).float().reshape([1,3,1,1])
 def save_imgtsr(finimgs, figdir:str ="", savestr:str =""):

@@ -4,13 +4,14 @@ from os.path import join
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
+from core.plot_utils import saveallforms
 from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
 
 mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 # saveroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
-#%%
 
 
 def load_covtsrs(Animal, Expi, layer, ):
@@ -42,7 +43,6 @@ def load_NMF_factors(Animal, Expi, layer, NF=3):
 """
 Recovery using the weights tensor L2 norm abs of sum
 """
-from core.plot_utils import saveallforms
 fitroot = r'E:\OneDrive - Harvard University\Manifold_NeuralRegress'
 outdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary\weight_attrb_mask"
 
@@ -120,7 +120,7 @@ df_filter3 = df_all_reset[True \
                         &  ((df_all_reset.img_space == 'all') | (df_all_reset.img_space == 'Manif'))
                         &  (~df_all_reset.FeatRed.str.contains("1")) & (~df_all_reset.FeatRed.str.contains("3"))
                         ]
-import seaborn as sns
+
 g = sns.FacetGrid(df_filter3, row="FeatRed", col="regressor",
               size=3, ylim=(0, 1), aspect=0.5)
 g.map(plt.bar, "img_space", "rho_p").add_legend()

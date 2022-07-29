@@ -8,8 +8,9 @@ import matplotlib.pylab as plt
 from collections import defaultdict
 from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
-from core.layer_hook_utils import featureFetcher
 from core.Optimizers import CholeskyCMAES
+from core.layer_hook_utils import featureFetcher
+from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 from core.neural_regress.regress_lib import compare_activation_prediction, sweep_regressors, \
     resizer, normalizer, PoissonRegressor, Ridge, KernelRidge
 #%% Prepare CNN, GAN players
@@ -33,7 +34,6 @@ Xfeat_transformer = {'pca': lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], 
 Xfeat_transformer = {"sp_rf": lambda tsr: tsr[:, :, 6, 6].copy(),
                      "sp_avg": lambda tsr: tsr.mean(axis=(2, 3))}
 #%%
-from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 
 dataset = create_imagenet_valid_dataset(imgpix=227, normalize=True)
 data_loader = DataLoader(dataset, batch_size=100,

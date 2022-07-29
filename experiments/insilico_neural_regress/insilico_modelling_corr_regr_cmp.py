@@ -4,31 +4,34 @@ Using one model to regress the other. Compare
 * Prediction of held out response
 * Prediction of out of sample response like ImageNet Validation
 """
+import os
 import torch
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from os.path import join
+import pickle as pkl
+import matplotlib as mpl
 import matplotlib.pylab as plt
+import seaborn as sns
+from scipy.stats import pearsonr, spearmanr
+
 from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
 from core.layer_hook_utils import featureFetcher
-import pickle as pkl
 from core.featvis_lib import tsr_posneg_factorize
-import matplotlib
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
-dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
-#%% Plot the anatomical receptive field of the target scorer unit.
-import os
-import seaborn as sns
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader, Subset
 from core.neural_regress.regress_lib import calc_reduce_features_dataset,\
     evaluate_prediction, sweep_regressors, Ridge, Lasso
-from core.grad_RF_estim import grad_RF_estimate, fit_2dgauss
+from core.grad_RF_estim import grad_RF_estimate, fit_2dgauss, GAN_grad_RF_estimate
 from core.grad_RF_estim import grad_population_RF_estimate
-from scipy.stats import pearsonr, spearmanr
+from core.plot_utils import save_imgrid
+
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
+#%% Plot the anatomical receptive field of the target scorer unit.
 def estimate_RF_for_fit_models(fit_models, targetlayer, Hmaps, ccfactor, savedir,
                                prefix="", reps=100, batch=1, show=True,):
     gradmap_dict = {}
@@ -58,6 +61,7 @@ def estimate_RF_for_fit_models(fit_models, targetlayer, Hmaps, ccfactor, savedir
         gradmap_dict[(FeatReducer, regressor, )] = (gradAmpmap, fitdict)
 
     return gradmap_dict
+
 
 def shorten_layername(name):
     return name.replace(".layer","L").replace(".Bottleneck", "Btn")
@@ -143,10 +147,8 @@ os.makedirs(outdir, exist_ok=True)
 targetlayer = ".layer3.Bottleneck5"
 targetunit = (10, 3, 3)
 #%%
-matplotlib.use("Agg") # 'module://backend_interagg'
+mpl.use("Agg") # 'module://backend_interagg'
 #%%
-from core.plot_utils import save_imgrid
-from core.grad_RF_estim import GAN_grad_RF_estimate
 for (targetunit, targetlayer) in [
                                   # ((10, 9, 9), ".layer3.Bottleneck5"),
                                   # ((20, 9, 3), ".layer3.Bottleneck5"),

@@ -2,39 +2,24 @@ import os
 from os.path import join
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.io import loadmat
-from core.neural_data_loader import load_score_mat
+from core.neural_data_loader import load_score_mat, uniformize_psth
+
+mpl.rcParams['pdf.fonttype'] = 42
+mpl.rcParams['ps.fonttype'] = 42
+mpl.use('Agg')
+# mpl.use('module://backend_interagg')
+#%%
 rootdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress"
-sumdir = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress\summary"
-mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
-figdir = join(sumdir, "classic_figs")
+sumdir  = join(rootdir, "summary")
+figdir  = join(sumdir, "classic_figs")
 os.makedirs(figdir, exist_ok=True)
-#%%
-import matplotlib
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
-matplotlib.use('Agg')
-# matplotlib.use('module://backend_interagg')
-#%%
-def uniformize_psth(psth_arr):
-    """Deal with the fact that the PSTH is squeezed so the dimension is not uniform"""
-    format_psth = np.zeros([11, 11], dtype="O")
-    for i in range(psth_arr.shape[0]):
-        for j in range(psth_arr.shape[1]):
-            psth = psth_arr[i, j]
-            if psth.ndim == 3:
-                format_psth[i, j] = psth[unit_in_chan - 1, :, :]
-            elif psth.ndim == 2 and psth.shape[0] == 200:
-                format_psth[i, j] = psth[:, :]
-            elif psth.ndim == 2 and psth.shape[1] == 200:
-                format_psth[i, j] = psth[unit_in_chan - 1, :, np.newaxis]
-            elif psth.ndim == 1 and psth.shape[0] == 200:
-                format_psth[i, j] = psth[:, np.newaxis, ]
-            else:
-                raise ValueError("Unrecognized psth format {}".format(psth.shape))
-    return format_psth
+mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
+
+
 #%%
 bslwdw = slice(0, 45)
 evkwdw = slice(50, 200)
@@ -96,7 +81,7 @@ for Animal in ["Beto"]: # ["Alfa", "Beto"]:
             raise ValueError("Unrecognized psth format {}".format(MS.manif.psth.shape))
         axesdict = {"":("PC2", "PC3"), "PC4950":("PC49", "PC50"), "RND12":("RND1", "RND2")}
         for psth_arr, spacelabel in zip(psth_arrs, ["", "PC4950", "RND12"]):
-            format_psth = uniformize_psth(psth_arr)
+            format_psth = uniformize_psth(psth_arr, unit_in_chan)  # uniform the squeezed dimensions
             evkvec_mat = evk_act_func(format_psth)
             evk_mat = evk_mean_func(format_psth)
             bslvec_mat = bsl_act_func(format_psth)

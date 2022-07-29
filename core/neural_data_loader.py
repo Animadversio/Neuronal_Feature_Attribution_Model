@@ -13,6 +13,26 @@ mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
 Pasupath = r"N:\Stimuli\2019-Manifold\pasupathy-wg-f-4-ori"
 Gaborpath = r"N:\Stimuli\2019-Manifold\gabor"
 
+
+def uniformize_psth(psth_arr, unit_in_chan=1):
+    """Deal with the fact that the PSTH is squeezed so the dimension is not uniform
+    """
+    format_psth = np.zeros([11, 11], dtype="O")
+    for i in range(psth_arr.shape[0]):
+        for j in range(psth_arr.shape[1]):
+            psth = psth_arr[i, j]
+            if psth.ndim == 3:
+                format_psth[i, j] = psth[unit_in_chan - 1, :, :]
+            elif psth.ndim == 2 and psth.shape[0] == 200:
+                format_psth[i, j] = psth[:, :]
+            elif psth.ndim == 2 and psth.shape[1] == 200:
+                format_psth[i, j] = psth[unit_in_chan - 1, :, np.newaxis]
+            elif psth.ndim == 1 and psth.shape[0] == 200:
+                format_psth[i, j] = psth[:, np.newaxis, ]
+            else:
+                raise ValueError("Unrecognized psth format {}".format(psth.shape))
+    return format_psth
+
 #%% Load full path to images and psths
 def load_score_mat(EStats, MStats, Expi, ExpType, wdws=[(50,200)], stimdrive="N"):
     """
