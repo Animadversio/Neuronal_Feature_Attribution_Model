@@ -1,8 +1,12 @@
-"""in silico modelling experiment
-Using one model to regress the other. Compare
+"""Larger scale in silico modelling experiment
+Using one model to regress the units in another.
+Using evolution trajectory as training data.
+
+Compare
+
 * RF estimate / weight visualization
 * Prediction of held out response
-* Prediction of out of sample response like ImageNet Validation
+* Prediction of out of distribution response like ImageNet Validation
 """
 import os
 import torch
@@ -28,8 +32,6 @@ from core.grad_RF_estim import grad_RF_estimate, fit_2dgauss, GAN_grad_RF_estima
 from core.grad_RF_estim import grad_population_RF_estimate
 from core.plot_utils import save_imgrid
 
-mpl.rcParams['pdf.fonttype'] = 42
-mpl.rcParams['ps.fonttype'] = 42
 dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 #%% Plot the anatomical receptive field of the target scorer unit.
 def estimate_RF_for_fit_models(fit_models, targetlayer, Hmaps, ccfactor, savedir,
@@ -125,6 +127,7 @@ def summarize_rf_cmp(gradAmpmap, fitdict, gradmap_dict, expstr, expdir=None):
             df.to_csv(join(dir, f"{expstr}-RegrRF-cmp-statistics.csv"), )
     return df, figh, figh2, figh3
 #%%
+# GAN model for Evolution.
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)
 #%%
@@ -268,7 +271,7 @@ for (targetunit, targetlayer) in [
     resp_all = []
     optimizer = CholeskyCMAES(4096, population_size=None, init_sigma=3.0)
     z_arr = np.zeros((1, 4096))  # optimizer.init_x
-    pbar = tqdm(range(60))
+    pbar = tqdm(range(60))  # 60 generations in total
     for i in pbar:
         imgs = G.visualize(torch.tensor(z_arr).float().cuda())
         resp = scorer.score(imgs, )
@@ -310,9 +313,9 @@ for (targetunit, targetlayer) in [
              "pca": lambda tsr: pca.transform(tsr.reshape(tsr.shape[0], -1)),
              "srp": lambda tsr: srp.transform(tsr.reshape(tsr.shape[0], -1)),}
     # "facttsr3": lambda tsr: np.einsum("BCHW,CF,HWF->B", tsr, ccfactor, Hmaps).reshape(tsr.shape[0], -1),  }
-    #%%
+    #%% save the reduced features
     Xdict = {k: Xtfms[k](feattsr_all) for k in Xtfms}
-    #%%
+    #%% Fit regressors and save
     ridge = Ridge(alpha=1.0)
     lasso = Lasso(alpha=1.0)
     # poissreg = PoissonRegressor(alpha=1.0, max_iter=500)
@@ -324,17 +327,22 @@ for (targetunit, targetlayer) in [
     result_df.to_csv(join(expdir, "evol_regress_results.csv"))
     pkl.dump(fit_models, open(join(expdir, "evol_regress_models.pkl"), "wb"))
     #%%
+    """ Estimate RF for fit model. Evaluate RF recovery. """
+    # Compute RF for fit models
     gradmap_dict = estimate_RF_for_fit_models(fit_models, regresslayer, Hmaps, ccfactor,
                                    expdir, prefix=prefix, )
+    # Compute the RF of ground truth unit.
     try:
         gradAmpmap = grad_RF_estimate(scorer.model, targetlayer, targetunit, input_size=(3,227,227),
                          device="cuda", show=True, reps=200, batch=1)
     except ValueError:
+        # note for higher order units, random white noise pattern is unlikely to evoke them.
+        # here we use random GAN images to estimate the \partial_I f
         gradAmpmap = GAN_grad_RF_estimate(G, scorer.model, targetlayer, targetunit, input_size=(3,227,227),
                          device="cuda", show=True, reps=20, batch=5)
     fitdict = fit_2dgauss(gradAmpmap, prefix, outdir=expdir, plot=True)
     # Xlim, Ylim = gradmap2RF_square(gradAmpmap, absthresh=None, relthresh=0.01, square=True))
-    #%% Evaluate RF fit
+    #%% Evaluate RF fit by comparing it to ground truth
     for (FeatReducer, regressor, ) in fit_models:
         gradAmpmap_model, fitdict_model = gradmap_dict[(FeatReducer, regressor, )]
         cval, pval = spearmanr(gradAmpmap.flatten(), gradAmpmap_model.flatten())
@@ -345,7 +353,9 @@ for (targetunit, targetlayer) in [
     pkl.dump((gradAmpmap, fitdict), open(join(expdir, "groundtruth_gradmap_rfdict.pkl"), "wb"))
     df_rfstat, _, _, _ = summarize_rf_cmp(gradAmpmap, fitdict, gradmap_dict, expstr, expdir=[expdir, sumdir])
 
-    #%% Get "ground truth" scores from ImageNet validation set
+    #%%
+    """ Predict the response to ImageNet images. Evaluate performance. """
+    # Get "ground truth" scores from ImageNet validation set
     dataset = create_imagenet_valid_dataset(imgpix=227, normalize=False)
     data_loader = DataLoader(Subset(dataset, range(0, 1000)), batch_size=40,
                   shuffle=False, num_workers=0)
@@ -358,7 +368,7 @@ for (targetunit, targetlayer) in [
         target_scores_natval.append(score_batch)
 
     target_scores_natval = np.concatenate(target_scores_natval, axis=0)
-    #%%
+    #%% Calculate features for the ImageNet Validation set.
     INdata = create_imagenet_valid_dataset(imgpix=227)
     natvalXfeat = calc_reduce_features_dataset(INdata, Xtfms, net, regresslayer, idx_range=range(0, 1000))
     #%%

@@ -1,11 +1,16 @@
-"""A demo of in silico modelling experiment"""
+"""
+A less compressed demo of in silico modelling experiment
+a walk through of comparing different feature reduction method x regressor in prediction power.
+
+    More concise version in `insilico_modelling_corr_regr_cmp.py`
+
+"""
 import torch
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import pickle as pkl
 from os.path import join
-import matplotlib
 import matplotlib.pylab as plt
 from collections import defaultdict
 
@@ -13,9 +18,8 @@ from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
 from core.layer_hook_utils import featureFetcher
+from core.plot_utils import show_imgrid
 
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
 dataroot = r"E:\OneDrive - Harvard University\CNN_neural_regression"
 #%%
 # GAN model
@@ -66,7 +70,6 @@ from sklearn.decomposition import PCA
 from scipy.stats import spearmanr, pearsonr
 from torchvision.transforms import Normalize, Resize
 
-from core.plot_utils import show_imgrid
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader
 from core.neural_regress.regress_lib import sweep_regressors, compare_activation_prediction
 
