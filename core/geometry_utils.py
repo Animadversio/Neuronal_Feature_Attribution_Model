@@ -5,6 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 from numpy import sqrt
 import torch
+
 # Utility functions for interpolation
 def SLERP(code1, code2, steps, lim=(0,1)):
     """Spherical Linear Interpolation for numpy arrays"""
@@ -50,6 +51,7 @@ def LExpMap(refcode, tan_vec, steps, lim=(0,1)):
     exp_code = refcode + ticks @ tan_vec
     return exp_code
 
+
 def SExpMap(refcode, tan_vec, steps, lim=(0,1)):
     """ Linear Interpolation for numpy arrays"""
     refcode, tan_vec = refcode.reshape(1,-1), tan_vec.reshape(1,-1)
@@ -59,6 +61,7 @@ def SExpMap(refcode, tan_vec, steps, lim=(0,1)):
     angles = np.linspace(lim[0], lim[1], steps, endpoint=True)[:, np.newaxis]
     exp_code = (np.cos(angles) @ refcode / refnorm + np.sin(angles) @ realtanv / tannorm) * refnorm
     return exp_code
+
 #%% Geometric Utility Function
 def ExpMap(x, tang_vec, EPS = 1E-4):
     angle_dist = sqrt((tang_vec ** 2).sum(axis=1))  # vectorized
@@ -71,6 +74,7 @@ def ExpMap(x, tang_vec, EPS = 1E-4):
     y = (np.cos(angle_dist) @ (x[:] / xnorm) + np.sin(angle_dist) * uni_tang_vec) * xnorm
     return y
 
+
 def VecTransport(xold, xnew, v):
     xold = xold / np.linalg.norm(xold)
     xnew = xnew / np.linalg.norm(xnew)
@@ -79,6 +83,7 @@ def VecTransport(xold, xnew, v):
         x_symm_axis) ** 2 * x_symm_axis  # Equation for vector parallel transport along geodesic
     # Don't use dot in numpy, it will have wierd behavior if the array is not single dimensional
     return v_transport
+
 
 def radial_proj(codes, max_norm):
     if max_norm is np.inf:
@@ -90,6 +95,7 @@ def radial_proj(codes, max_norm):
         proj_norm = np.minimum(code_norm, max_norm)
         return codes / code_norm[:, np.newaxis] * proj_norm[:, np.newaxis]
 
+
 def orthogonalize(basis, codes):
     if len(basis.shape) is 1:
         basis = basis[np.newaxis, :]
@@ -97,6 +103,7 @@ def orthogonalize(basis, codes):
     unit_basis = basis / norm(basis)
     codes_ortho = codes - (codes @ unit_basis.T) @ unit_basis
     return codes_ortho
+
 
 def renormalize(codes, norms):
     norms = np.array(norms)

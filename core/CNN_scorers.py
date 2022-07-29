@@ -1,23 +1,67 @@
+"""
+pytorch CNN scorer that creates functions that map images to
+activation values of their hidden units.
+"""
+from sys import platform
 import os
 from os.path import join
-from sys import platform
-from time import time, sleep
 import numpy as np
-from sklearn.decomposition import PCA
+import torch
+from torchvision import models
+from torchvision import transforms
+import torch.nn.functional as F
+from layer_hook_utils import layername_dict, register_hook_by_module_names, get_module_names, named_apply
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
-import torch
-from torchvision import transforms
-from torchvision import models
-import torch.nn.functional as F
-from GAN_utils import upconvGAN
-from layer_hook_utils import layername_dict, register_hook_by_module_names, get_module_names, named_apply
-from ZO_HessAware_Optimizers import HessAware_Gauss_DC, CholeskyCMAES
-from utils_old import visualize_img_list
-# mini-batches of 3-channel RGB images of shape (3 x H x W), where H and W are expected to be at least 224. The images have to be loaded in to a range of [0, 1] and then normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225].
+
+if platform == "linux": # cluster
+    # torchhome = "/scratch/binxu/torch/checkpoints"  # CHPC
+    if "ris.wustl.edu" in os.environ['HOSTNAME']:
+        scratchdir = os.environ["SCRATCH1"]
+        torchhome = join(scratchdir, "torch/checkpoints")  # RIS
+    else:
+        torchhome = torch.hub._get_torch_home()
+else:
+    if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH':  # PonceLab-Desktop 3
+        torchhome = r"E:\Cluster_Backup\torch"
+    elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S':  ## Home_WorkStation
+        torchhome = r"E:\Cluster_Backup\torch"
+    elif os.environ['COMPUTERNAME'] == 'DESKTOP-9LH02U9':  ## Home_WorkStation Victoria
+        torchhome = r"E:\Cluster_Backup\torch"
+    elif os.environ['COMPUTERNAME'] =='PONCELAB-OFF6':
+        torchhome = r"C:\Users\ponce\Documents\torch"
+    else:
+        torchhome = torch.hub._get_torch_home()
+
+
+def load_featnet(netname: str):
+    """Load common CNNs and their convolutional part.
+    Default behvavior: load onto GPU, and set parameter gradient to false.
+    """
+    if netname == "alexnet":
+        net = models.alexnet(True)
+        net.requires_grad_(False)
+        featnet = net.features.cuda().eval()
+    elif netname == "vgg16":
+        net = models.vgg16(pretrained=True)
+        net.requires_grad_(False)
+        featnet = net.features.cuda().eval()
+    elif netname == "resnet50":
+        net = models.resnet50(pretrained=True)
+        net.requires_grad_(False)
+        featnet = net.cuda().eval()
+    elif netname == "resnet50_linf8":
+        net = models.resnet50(pretrained=True)
+        net.load_state_dict(torch.load(join(torchhome, "imagenet_linf_8_pure.pt")))
+        net.requires_grad_(False)
+        featnet = net.cuda().eval()
+    else:
+        raise NotImplementedError
+    return featnet, net
+
 
 activation = {}  # global variable is important for hook to work! it's an important channel for communication
 def get_activation(name, unit=None, unitmask=None, ingraph=False):
@@ -41,21 +85,6 @@ def get_activation(name, unit=None, unitmask=None, ingraph=False):
                 activation[name] = out[:, unit[0]]
 
     return hook
-
-
-if platform == "linux": # cluster
-    # torchhome = "/scratch/binxu/torch/checkpoints"  # CHPC
-    scratchdir = os.environ["SCRATCH1"]
-    torchhome = join(scratchdir, "torch/checkpoints")  # CHPC
-else:
-    if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH':  # PonceLab-Desktop 3
-        torchhome = r"E:\Cluster_Backup\torch"
-    elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S':  ## Home_WorkStation
-        torchhome = r"E:\Cluster_Backup\torch"
-    elif os.environ['COMPUTERNAME'] == 'DESKTOP-9LH02U9':  ## Home_WorkStation Victoria
-        torchhome = r"E:\Cluster_Backup\torch"
-    elif os.environ['COMPUTERNAME'] =='PONCELAB-OFF6':
-        torchhome = r"C:\Users\ponce\Documents\torch"
 
 
 class TorchScorer:
@@ -415,57 +444,6 @@ def visualize_trajectory(scores_all, generations, codes_arr=None, show=False, ti
     return figh
 
 
-
-# if platform == "linux":  # CHPC cluster
-#     ckpt_dir = "/scratch/binxu.wang/torch"
-# else:
-#     if os.environ['COMPUTERNAME'] == 'DESKTOP-9DDE2RH':  # PonceLab-Desktop 3
-#         ckpt_dir = r"E:\Cluster_Backup\torch"
-#     elif os.environ['COMPUTERNAME'] == 'DESKTOP-MENSD6S':  # Home_WorkStation
-#         ckpt_dir = r"E:\Cluster_Backup\torch"
-#     # elif os.environ['COMPUTERNAME'] == 'PONCELAB-ML2C':  # PonceLab-Desktop Victoria
-#     #     ckpt_dir = r"E:\Cluster_Backup\torch"
-#     # elif os.environ['COMPUTERNAME'] == 'DESKTOP-9LH02U9':  # Home_WorkStation Victoria
-#     #     ckpt_dir = r"E:\Cluster_Backup\torch"
-#     elif os.environ['COMPUTERNAME'] == 'LAPTOP-U8TSR4RE':
-#         ckpt_dir = r"D:\torch\checkpoints"
-#     elif os.environ['COMPUTERNAME'] == 'PONCELAB-ML2B': # Alfa rig monkey computer
-#         ckpt_dir = r"C:\Users\Ponce lab\Documents\Python\torch_nets"
-#     elif os.environ['COMPUTERNAME'] == 'PONCELAB-ML2A': # Alfa rig monkey computer
-#         ckpt_dir = r"C:\Users\Poncelab-ML2a\Documents\Python\torch_nets"
-#     else:
-#         ckpt_dir = r"C:\Users\ponce\Documents\torch"
-
-def load_featnet(netname: str):
-    """API to load common CNNs and their convolutional part.
-    Default behvavior: load onto GPU, and set parameter gradient to false.
-    """
-    if netname == "alexnet":
-        net = models.alexnet(True)
-        net.requires_grad_(False)
-        featnet = net.features.cuda().eval()
-    elif netname == "vgg16":
-        net = models.vgg16(pretrained=True)
-        net.requires_grad_(False)
-        featnet = net.features.cuda().eval()
-    elif netname == "resnet50":
-        net = models.resnet50(pretrained=True)
-        net.requires_grad_(False)
-        featnet = net.cuda().eval()
-    elif netname == "resnet50_linf8":
-        net = models.resnet50(pretrained=True)
-        net.load_state_dict(torch.load(join(torchhome, "imagenet_linf_8_pure.pt")))
-        net.requires_grad_(False)
-        featnet = net.cuda().eval()
-    else:
-        raise NotImplementedError
-    return featnet, net
-
-
-init_sigma = 3
-Aupdate_freq = 10
-# from cv2 import resize
-# import cv2
 from skimage.transform import rescale, resize
 def resize_and_pad(img_list, size, offset, canvas_size=(227, 227), scale=1.0):
     '''Resize and Pad a list of images to list of images
@@ -511,325 +489,3 @@ def subsample_mask(factor=2, orig_size=(21, 21)):
     idx_lin = msk_lin.nonzero()[0]
     return msk, idx_lin
 
-
-class ExperimentManifold:
-    def __init__(self, model_unit, max_step=100, imgsize=(227, 227), corner=(0, 0), optimizer=None,
-                 savedir="", explabel="", backend="torch", GAN="fc6"):
-        self.recording = []
-        self.scores_all = []
-        self.codes_all = []
-        self.generations = []
-        self.pref_unit = model_unit
-        self.backend = backend
-        if backend == "caffe":
-            from insilico_Exp import CNNmodel # really old version
-            self.CNNmodel = CNNmodel(model_unit[0])  # 'caffe-net'
-        elif backend == "torch":
-            if model_unit[0] == 'caffe-net': # `is` won't work here!
-                from insilico_Exp import CNNmodel_Torch
-                self.CNNmodel = CNNmodel_Torch(model_unit[0])  # really old version
-            else:  # AlexNet, VGG, ResNet, DENSE and anything else
-                self.CNNmodel = TorchScorer(model_unit[0])
-        else:
-            raise NotImplementedError
-        self.CNNmodel.select_unit(model_unit)
-        # Allow them to choose from multiple optimizers, substitute generator.visualize and render
-        if GAN == "fc6" or GAN == "fc7" or GAN == "fc8":
-            from GAN_utils import upconvGAN
-            self.G = upconvGAN(name=GAN).cuda()
-            self.render_tsr = self.G.visualize_batch_np  # this output tensor
-            self.render = self.G.render
-            # self.G = Generator(name=GAN)
-            # self.render = self.G.render
-            if GAN == "fc8":
-                self.code_length = 1000
-            else:
-                self.code_length = 4096
-        elif GAN == "BigGAN":
-            from BigGAN_Evolution import BigGAN_embed_render
-            self.render = BigGAN_embed_render
-            self.code_length = 256  # 128 # 128d Class Embedding code or 256d full code could be used.
-        else:
-            raise NotImplementedError
-        if optimizer is None:
-            self.optimizer = CholeskyCMAES(self.code_length, population_size=None, init_sigma=init_sigma,
-                                       init_code=np.zeros([1, self.code_length]), Aupdate_freq=Aupdate_freq,
-                                       maximize=True, random_seed=None, optim_params={})
-        else:
-            self.optimizer = optimizer
-
-        self.max_steps = max_step
-        self.corner = corner  # up left corner of the image
-        self.imgsize = imgsize  # size of image, allowing showing CNN resized image
-        self.savedir = savedir
-        self.explabel = explabel
-        self.Perturb_vec = []
-
-    def re_init(self):
-        self.optimizer = CholeskyCMAES(self.code_length, population_size=None, init_sigma=init_sigma,
-                                       init_code=np.zeros([1, self.code_length]), Aupdate_freq=Aupdate_freq,
-                                       maximize=True, random_seed=None, optim_params={})
-        self.Perturb_vec = []
-        self.CNNmodel.cleanup()
-
-    def run(self, init_code=None):
-        """Same as Resized Evolution experiment"""
-        self.recording = []
-        self.scores_all = []
-        self.codes_all = []
-        self.generations = []
-        for self.istep in range(self.max_steps):
-            if self.istep == 0:
-                if init_code is None:
-                    codes = np.zeros([1, self.code_length])
-                else:
-                    codes = init_code
-            print('\n>>> step %d' % self.istep)
-            t0 = time()
-            # if self.backend == "caffe":
-            #     self.current_images = self.render(codes)
-            #     t1 = time()  # generate image from code
-            #     self.current_images = resize_and_pad(self.current_images, self.imgsize, self.corner)  # Fixed Apr.13
-            #     synscores = self.CNNmodel.score(self.current_images)
-            #     t2 = time()  # score images
-            # elif self.backend == "torch":
-            self.current_images = self.render_tsr(codes)
-            t1 = time()  # generate image from code
-            self.current_images = resize_and_pad_tsr(self.current_images, self.imgsize, self.corner)
-            # Fixed Jan.14 2021
-            synscores = self.CNNmodel.score_tsr(self.current_images)
-            t2 = time()  # score images
-            codes_new = self.optimizer.step_simple(synscores, codes)
-            t3 = time()  # use results to update optimizer
-            self.codes_all.append(codes)
-            self.scores_all = self.scores_all + list(synscores)
-            self.generations = self.generations + [self.istep] * len(synscores)
-            codes = codes_new
-            # summarize scores & delays
-            print('synthetic img scores: mean {}, all {}'.format(np.nanmean(synscores), synscores))
-            print(('step %d time: total %.2fs | ' +
-                   'code visualize %.2fs  score %.2fs  optimizer step %.2fs')
-                  % (self.istep, t3 - t0, t1 - t0, t2 - t1, t3 - t2))
-        self.codes_all = np.concatenate(tuple(self.codes_all), axis=0)
-        self.scores_all = np.array(self.scores_all)
-        self.generations = np.array(self.generations)
-
-    def save_last_gen(self, filename=""):
-        idx = np.argmax(self.scores_all)
-        select_code = self.codes_all[idx:idx + 1, :]
-        lastgen_code = np.mean(self.codes_all[self.generations == max(self.generations), :], axis=0, keepdims=True)
-        lastgen_score = np.mean(self.scores_all[self.generations == max(self.generations)], )
-        np.savez(join(self.savedir, "Evolution_codes_%s.npz" % (self.explabel)),
-                 best_code=select_code, best_score=self.scores_all[idx],
-                 lastgen_codes=lastgen_code, lastgen_score=lastgen_score)
-        print("Last generation and Best code saved.")
-
-    def load_traj(self, filename):
-        data = np.load(join(self.savedir, filename))
-        self.codes_all = data["codes_all"]
-        self.scores_all = data["scores_all"]
-        self.generations = data["generations"]
-
-    def analyze_traj(self):
-        '''Get the trajectory and the PCs and the structures of it'''
-        final_gen_norms = np.linalg.norm(self.codes_all[self.generations == max(self.generations), :], axis=1)
-        self.sphere_norm = final_gen_norms.mean()
-        code_pca = PCA(n_components=50)
-        PC_Proj_codes = code_pca.fit_transform(self.codes_all)
-        self.PC_vectors = code_pca.components_
-        if PC_Proj_codes[-1, 0] < 0:  # decide which is the positive direction for PC1
-            # this is important or the images we show will land in the opposite side of the globe.
-            inv_PC1 = True
-            self.PC_vectors[0, :] = - self.PC_vectors[0, :]
-            self.PC1_sign = -1
-        else:
-            inv_PC1 = False
-            self.PC1_sign = 1
-            pass
-
-    def render_manifold(self, subspace_list, interval=18, ):
-        '''Generate images on manifold '''
-        T0 = time()
-        figsum = plt.figure(figsize=[16.7, 4])
-        img_tsr_list = []
-        for spi, subspace in enumerate(subspace_list):
-            code_list = []
-            if subspace == "RND":
-                title = "Norm%dRND%dRND%d" % (self.sphere_norm, 0 + 1, 1 + 1)
-                print(
-                    "Generating images on PC1, Random vector1, Random vector2 sphere (rad = %d) " % self.sphere_norm)
-                rand_vec2 = np.random.randn(2, self.code_length)
-                rand_vec2 = rand_vec2 - (rand_vec2 @ self.PC_vectors.T) @ self.PC_vectors
-                rand_vec2 = rand_vec2 / np.sqrt((rand_vec2 ** 2).sum(axis=1))[:, np.newaxis]
-                rand_vec2[1, :] = rand_vec2[1, :] - (rand_vec2[1, :] @ rand_vec2[0, :].T) * rand_vec2[0, :]
-                rand_vec2[1, :] = rand_vec2[1, :] / np.linalg.norm(rand_vec2[1, :])
-                vectors = np.concatenate((self.PC_vectors[0:1, :], rand_vec2), axis=0)
-                # self.Perturb_vec.append(vectors)
-                interv_n = int(90 / interval)
-                for j in range(-interv_n, interv_n + 1):
-                    for k in range(-interv_n, interv_n + 1):
-                        theta = interval * j / 180 * np.pi
-                        phi = interval * k / 180 * np.pi
-                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
-                                              np.sin(theta) * np.cos(phi),
-                                              np.sin(phi)]]) @ vectors
-                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
-                        code_list.append(code_vec)
-            else:
-                PCi, PCj = subspace
-                title = "Norm%dPC%dPC%d" % (self.sphere_norm, PCi + 1, PCj + 1)
-                print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (
-                PCi + 1, PCj + 1, self.sphere_norm,))
-                interv_n = int(90 / interval)
-                # self.Perturb_vec.append(self.PC_vectors[[0, PCi, PCj], :])
-                for j in range(-interv_n, interv_n + 1):
-                    for k in range(-interv_n, interv_n + 1):
-                        theta = interval * j / 180 * np.pi
-                        phi = interval * k / 180 * np.pi
-                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
-                                              np.sin(theta) * np.cos(phi),
-                                              np.sin(phi)]]) @ self.PC_vectors[[0, PCi, PCj], :]
-                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
-                        code_list.append(code_vec)
-            print("Latent vectors ready, rendering. (%.3f sec passed)" % (time() - T0))
-            code_arr = np.array(code_list)
-            img_tsr = self.render_tsr(code_arr)
-            img_tsr_list.append(img_tsr)
-        return img_tsr_list
-
-    def run_manifold(self, subspace_list, interval=9, print_manifold=True):
-        '''Generate examples on manifold and run'''
-        self.score_sum = []
-        self.Perturb_vec = []
-        T0 = time()
-        figsum = plt.figure(figsize=[16.7, 4])
-        for spi, subspace in enumerate(subspace_list):
-            code_list = []
-            if subspace == "RND":
-                title = "Norm%dRND%dRND%d" % (self.sphere_norm, 0 + 1, 1 + 1)
-                print("Generating images on PC1, Random vector1, Random vector2 sphere (rad = %d) " % self.sphere_norm)
-                rand_vec2 = np.random.randn(2, self.code_length)
-                rand_vec2 = rand_vec2 - (rand_vec2 @ self.PC_vectors.T) @ self.PC_vectors
-                rand_vec2 = rand_vec2 / np.sqrt((rand_vec2 ** 2).sum(axis=1))[:, np.newaxis]
-                rand_vec2[1, :] = rand_vec2[1, :] - (rand_vec2[1, :] @ rand_vec2[0, :].T) * rand_vec2[0, :]
-                rand_vec2[1, :] = rand_vec2[1, :] / np.linalg.norm(rand_vec2[1, :])
-                vectors = np.concatenate((self.PC_vectors[0:1, :], rand_vec2), axis=0)
-                self.Perturb_vec.append(vectors)
-                # img_list = []
-                interv_n = int(90 / interval)
-                for j in range(-interv_n, interv_n + 1):
-                    for k in range(-interv_n, interv_n + 1):
-                        theta = interval * j / 180 * np.pi
-                        phi = interval * k / 180 * np.pi
-                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
-                                              np.sin(theta) * np.cos(phi),
-                                              np.sin(phi)]]) @ vectors
-                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
-                        code_list.append(code_vec)
-                        # img = self.G.visualize(code_vec)
-                        # img_list.append(img.copy())
-            else:
-                PCi, PCj = subspace
-                title = "Norm%dPC%dPC%d" % (self.sphere_norm, PCi + 1, PCj + 1)
-                print("Generating images on PC1, PC%d, PC%d sphere (rad = %d)" % (PCi + 1, PCj + 1, self.sphere_norm, ))
-                # img_list = []
-                interv_n = int(90 / interval)
-                self.Perturb_vec.append(self.PC_vectors[[0, PCi, PCj], :])
-                for j in range(-interv_n, interv_n + 1):
-                    for k in range(-interv_n, interv_n + 1):
-                        theta = interval * j / 180 * np.pi
-                        phi = interval * k / 180 * np.pi
-                        code_vec = np.array([[np.cos(theta) * np.cos(phi),
-                                              np.sin(theta) * np.cos(phi),
-                                              np.sin(phi)]]) @ self.PC_vectors[[0, PCi, PCj], :]
-                        code_vec = code_vec / np.sqrt((code_vec ** 2).sum()) * self.sphere_norm
-                        code_list.append(code_vec)
-                        # img = self.G.visualize(code_vec)
-                        # img_list.append(img.copy())
-                        # plt.imsave(os.path.join(newimg_dir, "norm_%d_PC2_%d_PC3_%d.jpg" % (
-                        # self.sphere_norm, interval * j, interval * k)), img)
-
-            # pad_img_list = resize_and_pad(img_list, self.imgsize, self.corner) # Show image as given size at given location
-            # scores = self.CNNmodel.score(pad_img_list)
-            print("Latent vectors ready, rendering. (%.3f sec passed)"%(time()-T0))
-            code_arr = np.array(code_list)
-            img_tsr = self.render_tsr(code_arr)
-            pad_img_tsr = resize_and_pad_tsr(img_tsr, self.imgsize, self.corner)  # Show image as given size at given location
-            scores = self.CNNmodel.score_tsr(pad_img_tsr)
-            img_arr = img_tsr.permute([0,2,3,1])
-            print("Image and score ready! Figure printing (%.3f sec passed)"%(time()-T0))
-            # fig = utils.visualize_img_list(img_list, scores=scores, ncol=2*interv_n+1, nrow=2*interv_n+1, )
-            # subsample images for better visualization
-            msk, idx_lin = subsample_mask(factor=2, orig_size=(21, 21))
-            img_subsp_list = [img_arr[i] for i in range(len(img_arr)) if i in idx_lin]
-            if print_manifold:
-                fig = visualize_img_list(img_subsp_list, scores=scores[idx_lin], ncol=interv_n + 1, nrow=interv_n + 1, )
-                fig.savefig(join(self.savedir, "%s_%s.png" % (title, self.explabel)))
-                plt.close(fig)
-            scores = np.array(scores).reshape((2*interv_n+1, 2*interv_n+1)) # Reshape score as heatmap.
-            self.score_sum.append(scores)
-            ax = figsum.add_subplot(1, len(subspace_list), spi + 1)
-            im = ax.imshow(scores)
-            plt.colorbar(im, ax=ax)
-            ax.set_xticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interv_n]); ax.set_xticklabels([-90,45,0,45,90])
-            ax.set_yticks([0, interv_n / 2, interv_n, 1.5 * interv_n, 2*interv_n]); ax.set_yticklabels([-90,45,0,45,90])
-            ax.set_title(title+"_Hemisphere")
-        figsum.suptitle("%s-%s-unit%03d  %s" % (self.pref_unit[0], self.pref_unit[1], self.pref_unit[2], self.explabel))
-        figsum.savefig(join(self.savedir, "Manifold_summary_%s_norm%d.png" % (self.explabel, self.sphere_norm)))
-        # figsum.savefig(join(self.savedir, "Manifold_summary_%s_norm%d.pdf" % (self.explabel, self.sphere_norm)))
-        self.Perturb_vec = np.concatenate(tuple(self.Perturb_vec), axis=0)
-        np.save(join(self.savedir, "Manifold_score_%s" % (self.explabel)), self.score_sum)
-        np.savez(join(self.savedir, "Manifold_set_%s.npz" % (self.explabel)),
-                 Perturb_vec=self.Perturb_vec, imgsize=self.imgsize, corner=self.corner,
-                 evol_score=self.scores_all, evol_gen=self.generations, sphere_norm=self.sphere_norm)
-        return self.score_sum, figsum
-
-    def visualize_best(self, show=False):
-        idx = np.argmax(self.scores_all)
-        select_code = self.codes_all[idx:idx+1, :]
-        score_select = self.scores_all[idx]
-        img_select = self.render(select_code, scale=1.0) #, scale=1
-        fig = plt.figure(figsize=[3, 1.7])
-        plt.subplot(1, 2, 1)
-        plt.imshow(img_select[0])
-        plt.axis('off')
-        plt.title("{0:.2f}".format(score_select), fontsize=16)
-        plt.subplot(1, 2, 2)
-        resize_select = resize_and_pad(img_select, self.imgsize, self.corner, scale=1.0)
-        plt.imshow(resize_select[0])
-        plt.axis('off')
-        plt.title("{0:.2f}".format(score_select), fontsize=16)
-        if show:
-            plt.show()
-        fig.savefig(join(self.savedir, "Best_Img_%s.png" % (self.explabel)))
-        return fig
-
-    def visualize_trajectory(self, show=True):
-        gen_slice = np.arange(min(self.generations), max(self.generations)+1)
-        AvgScore = np.zeros_like(gen_slice).astype("float64")
-        MaxScore = np.zeros_like(gen_slice).astype("float64")
-        for i, geni in enumerate(gen_slice):
-            AvgScore[i] = np.mean(self.scores_all[self.generations == geni])
-            MaxScore[i] = np.max(self.scores_all[self.generations == geni])
-        figh = plt.figure()
-        plt.scatter(self.generations, self.scores_all, s=16, alpha=0.6, label="all score")
-        plt.plot(gen_slice, AvgScore, color='black', label="Average score")
-        plt.plot(gen_slice, MaxScore, color='red', label="Max score")
-        plt.xlabel("generation #")
-        plt.ylabel("CNN unit score")
-        plt.title("Optimization Trajectory of Score\n")# + title_str)
-        plt.legend()
-        if show:
-            plt.show()
-        figh.savefig(join(self.savedir, "Evolv_Traj_%s.png" % (self.explabel)))
-        return figh
-
-
-if __name__=="__main__":
-    Exp = ExperimentManifold(("resnet101", ".layer3.Bottleneck22", 10, 7, 7), max_step=50, imgsize=(150, 150), corner=(30, 30),
-        savedir="", explabel="", backend="torch", GAN="fc6")
-    Exp.run()
-    Exp.visualize_best(True)
-    Exp.visualize_trajectory(True)
-    Exp.analyze_traj()
-    Exp.run_manifold([(1, 2), (24, 25), (48, 49), "RND"], interval=9)

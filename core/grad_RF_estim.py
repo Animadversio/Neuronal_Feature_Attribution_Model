@@ -8,7 +8,7 @@ import matplotlib.pylab as plt
 import scipy.optimize as opt
 from os.path import join
 from easydict import EasyDict
-from core.insilico_Exp_torch import get_activation, activation
+from core.CNN_scorers import get_activation, activation
 from core.layer_hook_utils import register_hook_by_module_names, get_module_names
 import torch.nn.functional as F
 
