@@ -7,8 +7,6 @@ from hdf5storage import loadmat
 from easydict import EasyDict as edict
 dataroot = r"E:\OneDrive - Washington University in St. Louis\corrFeatVis_FactorPredict"
 expdirs = [dir for dir in os.listdir(dataroot) if "decomp" in dir]
-
-#%%
 #%%
 def recursive_matdata2dict(matdata):
     if type(matdata) is not np.ndarray:
