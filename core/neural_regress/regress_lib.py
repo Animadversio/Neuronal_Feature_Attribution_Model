@@ -259,8 +259,10 @@ def evaluate_prediction(fit_models, Xfeat_dict, y_true, label="", savedir=None):
             D2 = regr.score(Xfeat_dict[Xtype], y_true)
             rho_p, pval_p = pearsonr(y_pred, y_true)
             rho_s, pval_s = spearmanr(y_pred, y_true)
-            print(f"{Xtype} {regrname} Prediction Pearson: {rho_p:.3f} {pval_p:.1e} Spearman: {rho_s:.3f} {pval_s:.1e} D2: {D2:.3f}")
-            eval_dict[(Xtype, regrname)] = {"rho_p":rho_p, "pval_p":pval_p, "rho_s":rho_s, "pval_s":pval_s, "D2":D2, "imgN":len(y_true)}
+            FEV = 1 - np.var(y_true - y_pred) / np.var(y_true)
+            print(f"{Xtype} {regrname} Prediction Pearson: {rho_p:.3f} {pval_p:.1e} Spearman: {rho_s:.3f} {pval_s:.1e} D2: {D2:.3f} FEV: {FEV:.3f}")
+            eval_dict[(Xtype, regrname)] = {"rho_p":rho_p, "pval_p":pval_p, "rho_s":rho_s, "pval_s":pval_s,
+                                            "D2":D2, "FEV":FEV, "imgN":len(y_true)}
             y_pred_dict[(Xtype, regrname)] = y_pred
         except:
             continue

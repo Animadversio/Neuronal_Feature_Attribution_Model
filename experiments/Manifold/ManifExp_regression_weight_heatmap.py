@@ -1,3 +1,7 @@
+"""
+Visualize the weight structure of the penalized regression model.
+Factorize the effective weight tensor.
+"""
 import os
 import pickle as pkl
 from os.path import join
@@ -79,9 +83,23 @@ for featlayer in ['.layer2.Bottleneck3', '.layer3.Bottleneck5', '.layer4.Bottlen
                     axs[1].axis("equal")
                     axs[1].set_title("mean abs weight")
                     plt.suptitle(titlestr)
-                    # plt.tight_layout()
                     plt.show()
-
+            #%%
+            # one side non-negative factorization of the combined weights tensor of PCA / SRP  x  Ridge, Lasso and PLS
+            # So you will see both the positive and negative weights in the feature vector.
+            FactStat_dict = {}
+            for i, FeatRed in enumerate(["pca", "srp"]):
+                for j, regressor in enumerate(["Ridge", "Lasso", "PLS"]):
+                    Hmat, Hmaps, ccfactor, FactStat = tsr_posneg_factorize(
+                        eff_wtsr_dict[(FeatRed, regressor)].numpy(),
+                        bdr=0, Nfactor=3, do_plot=True,
+                        figdir=join(expdir, "weight_vis"),
+                        savestr=f"{Animal}-Exp{Expi:02d}-{featlayer}-{FeatRed}-{regressor}_regress", )
+                    FactStat_dict[(FeatRed, regressor)] = FactStat
+            pkl.dump(FactStat_dict, open(
+                join(expdir, "weight_vis", f"{Animal}-Exp{Expi:02d}-{featlayer}_regress_factstat.pkl"), "wb"))
+            # raise ValueError("Done")
+            plt.close("all")
             # figh1, axs1 = plt.subplots(2, 3, figsize=(11, 8))
             # figh2, axs2 = plt.subplots(2, 3, figsize=(11, 8))
             # for i, FeatRed in enumerate(["pca", "srp"]):
@@ -105,18 +123,7 @@ for featlayer in ['.layer2.Bottleneck3', '.layer3.Bottleneck5', '.layer4.Bottlen
             # figh2.show()
             # plt.close(figh1)
             # plt.close(figh2)
-            FactStat_dict = {}
-            for i, FeatRed in enumerate(["pca", "srp"]):
-                for j, regressor in enumerate(["Ridge", "Lasso", "PLS"]):
-                    Hmat, Hmaps, ccfactor, FactStat = tsr_posneg_factorize(
-                        eff_wtsr_dict[(FeatRed, regressor)].numpy(),
-                        bdr=0, Nfactor=3, do_plot=True,
-                        figdir=join(expdir, "weight_vis"),
-                        savestr=f"{Animal}-Exp{Expi:02d}-{featlayer}-{FeatRed}-{regressor}_regress",)
-                    FactStat_dict[(FeatRed, regressor)] = FactStat
-            pkl.dump(FactStat_dict, open(join(expdir, "weight_vis", f"{Animal}-Exp{Expi:02d}-{featlayer}_regress_factstat.pkl"), "wb"))
-            # raise ValueError("Done")
-            plt.close("all")
+
 
 # sns.FacetGrid(data=eff_wtsr_dict, row="regressor", col="FeatRed", size=4).map(plt.imshow, "mean_abs_weight").add_legend()
 #%%

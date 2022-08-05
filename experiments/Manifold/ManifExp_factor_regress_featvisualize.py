@@ -157,7 +157,7 @@ for Animal in ["Alfa", "Beto"]:
             for regrlabel in regress_cfgs:
                 Xtype, regressor = regrlabel
                 mtg = plt.imread(join(featvis_dir, f"{Animal}-Exp{Expi:02d}-{featlayer}-{Xtype}-{regressor}_vis.png"))
-                proto_first = crop_from_montage(mtg, (0, 0))
+                proto_first = crop_from_montage(mtg, (0, 0))  # note the 0,0 is not necessarily the best image. Montage is not sorted.
                 proto_col.append(proto_first)
             method_mtg = make_grid_np(proto_col, nrow=8, rowfirst=False)
             # plt.imsave(join(featvis_dir, f"{Animal}-Exp{Expi:02d}-{featlayer}-factregr_merge_vis.png"), method_mtg, )
@@ -166,3 +166,5 @@ for Animal in ["Alfa", "Beto"]:
             # plt.show()
             # raise NotImplementedError
 #%%
+
+
