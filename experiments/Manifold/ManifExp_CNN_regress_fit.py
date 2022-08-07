@@ -11,7 +11,6 @@ import pickle as pkl
 from scipy.io import loadmat
 from scipy.stats import spearmanr, pearsonr
 from core.neural_data_loader import load_score_mat
-from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 
 # #%%
 # for Animal in ["Alfa", "Beto"]:
@@ -27,49 +26,19 @@ from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, p
 
 #%%
 from tqdm import tqdm
+from collections import defaultdict
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim import Adam, SGD
 from easydict import EasyDict as edict
+from core.plot_utils import saveallforms
 from core.dataset_utils import ImagePathDataset, DataLoader
 from core.CNN_scorers import load_featnet
 from core.layer_hook_utils import featureFetcher
 from core.neural_regress.cnn_readout_model import FactorizedConv2D, SeparableConv2D, MultilayerCnn
 from core.neural_regress.regress_lib import train_test_split, calc_reduce_features, calc_reduce_features_dataset
-
-kerMat = torch.tensor([[0.5,  1.0, 0.5],
-                       [1.0, -6.0, 1.0],
-                       [0.5,  1.0, 0.5]]).reshape(1, 1, 3, 3,).cuda()
-
-
-def Weight_Laplacian(depth_conv, ):
-    weighttsr = depth_conv.weight
-    filtered_wtsr = F.conv2d(weighttsr, kerMat, groups=weighttsr.shape[1])
-    return (filtered_wtsr**2).mean()
-
-
-def grad_diagnose(model, tb_writer=None, global_step=0):
-    if isinstance(model, MultilayerCnn):
-        print("\tGrad w norm %.1e wg norm %.1e Lw norm %.1e Lwg norm %.1e" % \
-            (model.model.layer2_conv.depth_conv.weight.norm(), model.model.layer2_conv.depth_conv.weight.grad.norm(),
-                   model.model.Linear.weight.norm(), model.model.Linear.weight.grad.norm()))
-
-    elif isinstance(model, FactorizedConv2D):
-        print("\tGrad w norm %.1e wg norm %.1e Lw norm %.1e Lwg norm %.1e" % \
-            (model.depth_conv.weight.norm(), model.depth_conv.weight.grad.norm(),
-                    model.linear.weight.norm(), model.linear.weight.grad.norm()))
-        if tb_writer is not None:
-            tb_writer.add_scalar("spmask_weight_norm", model.depth_conv.weight.norm(), global_step)
-            tb_writer.add_scalar("spmask_grad_norm", model.depth_conv.weight.grad.norm(), global_step)
-            tb_writer.add_scalar("featvec_weight_norm", model.point_conv.weight.norm(), global_step)
-            tb_writer.add_scalar("featvec_grad_norm", model.point_conv.weight.grad.norm(), global_step)
-            tb_writer.add_scalar("linear_weight_norm", model.linear.weight.norm(), global_step)
-            tb_writer.add_scalar("linear_grad_norm", model.linear.weight.grad.norm(), global_step)
-    # for name, param in model.named_parameters():
-    #     if param.requires_grad:
-    #         print(name, param.grad.norm())
+from core.neural_regress.cnn_train_utils import Weight_Laplacian, grad_diagnose
 
 
 def test_model_dataset(featnet, featFetcher, model, loader_test, label=None, modelid=None):
@@ -98,6 +67,41 @@ def test_model_dataset(featnet, featFetcher, model, loader_test, label=None, mod
     return scores_vec, pred_vec, S
 
 
+def test_multimodel_dataset(featnet, featFetcher, model_col, loader_test, score_m, score_s, label=None):
+    for k, model in model_col.items():
+        model.eval()
+    scores_vec = []
+    pred_col = defaultdict(list)
+    for j, (imgs, scores) in tqdm(enumerate(loader_test)):
+        imgs = imgs.cuda()
+        scores_norm = ((scores - score_m) / score_s).float().cuda().unsqueeze(1)
+        with torch.no_grad():
+            featnet(imgs)
+            feat = featFetcher[regresslayer]
+            for k, model in model_col.items():
+                pred = model(feat, )
+                pred_col[k].append(pred.cpu().numpy())
+
+        scores_vec.append(scores_norm.cpu().numpy())
+
+    scores_vec = np.concatenate(scores_vec, axis=0)
+    pred_dict = {}
+    S_dict = {}
+    for k, model in model_col.items():
+        pred_vec = np.concatenate(pred_col[k], axis=0)
+        pred_dict[k] = pred_vec
+        S = edict()
+        # S.pred_vec = pred_vec
+        S.mean_err = ((scores_vec - pred_vec)**2).mean()
+        S.FEV = 1 - np.var(scores_vec - pred_vec) / np.var(scores_vec)
+        S.cval, S.pval = pearsonr(scores_vec[:, 0], pred_vec[:, 0])
+        S.modelid = k
+        if label is not None:
+            S.label = label
+        S_dict[k] = S
+    return scores_vec, pred_dict, S_dict
+
+
 def test_model(featnet, featFetcher, model, imgfps, scores, img_dim=(224, 224), label=None, modelid=None):
     dataset_tmp = ImagePathDataset(imgfps, scores, img_dim=img_dim)
     loader_tmp = DataLoader(dataset_tmp, batch_size=120, shuffle=False, num_workers=8, drop_last=False)
@@ -105,20 +109,20 @@ def test_model(featnet, featFetcher, model, imgfps, scores, img_dim=(224, 224), 
     return scores_vec, pred_vec, S
 
 #%%
-saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress_SGD"
-mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
-
-MStats = loadmat(join(mat_path, Animal + "_Manif_stats.mat"), struct_as_record=False, squeeze_me=True)['Stats']
-EStats = loadmat(join(mat_path, Animal + "_Evol_stats.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
-ReprStats = loadmat(join(mat_path, Animal + "_ImageRepr.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
-#%%
 regresslayer = ".layer3.Bottleneck5"
 featnet, net = load_featnet("resnet50_linf8")
 featFetcher = featureFetcher(featnet, input_size=(3, 224, 224),
                              device="cuda", print_module=False)
 featFetcher.record(regresslayer, ingraph=True)
 #%%
+saveroot = r"E:\OneDrive - Harvard University\Manifold_NeuralRegress_SGD"
+mat_path = r"E:\OneDrive - Washington University in St. Louis\Mat_Statistics"
+
 Animal = "Alfa"
+MStats = loadmat(join(mat_path, Animal + "_Manif_stats.mat"), struct_as_record=False, squeeze_me=True)['Stats']
+EStats = loadmat(join(mat_path, Animal + "_Evol_stats.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
+ReprStats = loadmat(join(mat_path, Animal + "_ImageRepr.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
+#%%
 Expi = 3
 # load the image paths and the response vector
 expdir = join(saveroot, f"{Animal}_{Expi:02d}")
@@ -134,7 +138,7 @@ dataset_test = ImagePathDataset(imgfp_test, score_test, img_dim=(224, 224))
 loader = DataLoader(dataset, batch_size=120, shuffle=True, num_workers=8, drop_last=True)
 loader_test = DataLoader(dataset_test, batch_size=120, shuffle=False, num_workers=8, drop_last=False)
 
-#%%
+#%% Model training pipeline
 beta_lpls = 0.01
 beta_L2 = 0.0001
 for triali in range(0, 5):
@@ -154,7 +158,7 @@ for triali in range(0, 5):
             scores = (scores / score_s).float().cuda().unsqueeze(1)
             with torch.no_grad():
                 featnet(imgs)
-            feat = featFetcher[regresslayer]
+                feat = featFetcher[regresslayer]
             pred = model(feat, )
             # pred_nl = nn.Softplus()(pred)
             # loss = (pred_nl - scores_norm * torch.log(pred_nl)).mean()
@@ -198,7 +202,6 @@ for triali in range(0, 5):
 
 
 #%%
-from core.plot_utils import saveallforms
 score_manif, imgfp_manif = load_score_mat(EStats, MStats, Expi, "Manif_avg", wdws=[(50, 200)], stimdrive="N")
 score_pasu, imgfp_pasu = load_score_mat(EStats, MStats, Expi, "Pasu_avg", wdws=[(50, 200)], stimdrive="N")
 score_gab, imgfp_gab = load_score_mat(EStats, MStats, Expi, "Gabor_avg", wdws=[(50, 200)], stimdrive="N")
@@ -207,9 +210,40 @@ manif_loader = DataLoader(ImagePathDataset(imgfp_manif, score_manif, img_dim=(22
 pasu_loader = DataLoader(ImagePathDataset(imgfp_pasu, score_pasu, img_dim=(224, 224), ), num_workers=8, batch_size=120, shuffle=False)
 gab_loader = DataLoader(ImagePathDataset(imgfp_gab, score_gab, img_dim=(224, 224), ), num_workers=8, batch_size=120, shuffle=False)
 natref_loader = DataLoader(ImagePathDataset(imgfp_natref, score_natref, img_dim=(224, 224), ), num_workers=8, batch_size=120, shuffle=False)
+#%%
+model_col = {}
+for triali in range(0, 6):
+    trial_dir = join(expdir, "FactorConv_lpls001_l200001_nobn_tr%d" % triali)
+    # expdir_tr = join(expdir, "FactorConv_tr%d" % triali)
+    try:
+        model = FactorizedConv2D(1024, 1, kernel_size=(14, 14), factors=3, bn=False).cuda()
+        model.load_state_dict(torch.load(join(trial_dir, "model_best.pt")))
+        model_col[triali] = model
+    except FileNotFoundError:
+        continue
 
+scores_vec, preddict_vec, Scol = test_multimodel_dataset(featnet, featFetcher, model_col, loader_test, label="Evoltest", )
+scores_manif, preddict_manif, Scol_manif = test_multimodel_dataset(featnet, featFetcher, model_col, manif_loader, label="Manif", )
+scores_pasu, preddict_pasu, Scol_pasu = test_multimodel_dataset(featnet, featFetcher, model_col, pasu_loader, label="Pasu", )
+scores_gabor, preddict_gabor, Scol_gabor = test_multimodel_dataset(featnet, featFetcher, model_col, gab_loader, label="Gabor", )
+scores_natref, preddict_natref, Scol_natref = test_multimodel_dataset(featnet, featFetcher, model_col, natref_loader, label="NatRef", )
+# Scol.extend([S, S_manif, S_pasu, S_gabor, S_natref])
+#%%
+pkl.dump({"scores_evol":scores_vec, "preddict_evol":preddict_vec, "Scol_evol":Scol,
+        "scores_manif":scores_manif, "preddict_manif":preddict_manif, "Scol_manif":Scol_manif,
+        "scores_pasu":scores_pasu, "preddict_pasu":preddict_pasu, "Scol_pasu":Scol_pasu,
+        "scores_gabor":scores_gabor, "preddict_gabor":preddict_gabor, "Scol_gabor":Scol_gabor,
+        "scores_natref":scores_natref, "preddict_natref":preddict_natref, "Scol_natref":Scol_natref,},
+         open(join(expdir, "all_tr_all_imgset_pred_perform.pkl"), "wb"))
+df_all = pd.concat([pd.DataFrame(Scol).T,
+           pd.DataFrame(Scol_manif).T,
+           pd.DataFrame(Scol_pasu).T,
+           pd.DataFrame(Scol_gabor).T,
+           pd.DataFrame(Scol_natref).T], axis=0)
+df_all.to_csv(join(expdir, "all_tr_all_imgset_pred_perform.csv"))
+#%%
 Scol = []
-for triali in range(0, 7):
+for triali in range(0, 6):
     trial_dir = join(expdir, "FactorConv_lpls001_l200001_nobn_tr%d" % triali)
     # expdir_tr = join(expdir, "FactorConv_tr%d" % triali)
     try:
@@ -247,11 +281,14 @@ for triali in range(0, 7):
     saveallforms(trial_dir, "depth_conv_weights_lpls_best")
     plt.show()
 
-
 #%%
 df = pd.DataFrame(Scol)
-df.to_csv(join(expdir, "test_scatter_tr_info_lpls_best.csv"))
+df.to_csv(join(expdir, "all_tr_all_imgset_pred_perform.csv"))
+#%%
 
+
+
+#%%
 #%% Fit the factorized or PCA model on the same data.
 from core.CorrFeatFactor.CorrFeatTsr_data_load import load_NMF_factors
 from core.neural_regress.regress_lib import sweep_regressors, Ridge, Lasso, evaluate_prediction
