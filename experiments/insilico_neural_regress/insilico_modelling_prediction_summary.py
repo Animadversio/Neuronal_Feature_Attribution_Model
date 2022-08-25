@@ -50,12 +50,69 @@ def summarize_pred_exp():
 # df_INet, df_evol, df_part = summarize_pred_exp()
 df_all = summarize_pred_exp()
 #%%
+df_all.to_csv(join(figdir, "all_target_prediction_summary.csv"))
+#%%
 "L4Btn0-10-6-6"
 "eval_predict_-layer3-ImageNet.csv"
 "evol_regress_results.csv"
 #%%
 df_all.groupby(by="layer", level=(0,1)).agg({"rho_p": ["mean", "sem"], "D2":["mean","sem"], "n_feat":"mean"})
 #%%
+#%%
 df_all.reset_index(level=(0,1)).groupby(by=["layer", "level_0", "level_1", ])\
-    .agg({"rho_p": ["mean", "sem"], "D2":["mean","sem"], "n_feat":["mean","count"],
-           "evol_test_D2":["mean","sem"]})
+    .agg({"rho_p": ["mean", "sem"], "D2":["mean","sem"], "n_feat":["mean","count"], "evol_test_D2":["mean","sem"]})
+#%%
+df_all.reset_index(level=(0,1)).groupby(by=["layer", "level_0", "level_1", ])\
+    .agg({"D2":["mean","sem"], "evol_test_D2":["mean","sem"], "n_feat":["mean","count"], })
+#%%
+df_all.reset_index(level=(0,1)).groupby(by=["level_0", "level_1", ], sort=False)\
+    .agg({"D2":["mean","sem"], "evol_test_D2":["mean","sem"], "n_feat":["mean","count"], })
+#%%
+df_all.reset_index(level=(0,1)).groupby(by=["level_0", "level_1", ], sort=False)\
+    .agg({"rho_p": ["mean", "sem"], "evol_test_D2":["mean","sem"], "n_feat":["mean","count"], })
+#%%
+
+df_allcol = df_all.reset_index(level=(0,1)).rename(columns={"level_0": "featred","level_1":"regressor"}, )
+#%%
+for yval in ["evol_test_D2", "D2", "rho_p"]:
+    g = sns.FacetGrid(df_allcol, col="layer", row="sublayer", hue="regressor",
+                      size=5, palette="Set2", )
+    g.map(sns.barplot, "featred", yval, alpha=0.4, dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"]).add_legend()
+    plt.savefig(join(figdir, f"{yval}_bar_by_layer-sublayer.png"))
+    plt.savefig(join(figdir, f"{yval}_bar_by_layer-sublayer.pdf"))
+    plt.show()
+    # raise Exception("stop")
+#%%
+for yval in ["evol_test_D2", "D2", "rho_p"]: #
+    g = sns.FacetGrid(df_allcol, col="layer", row="sublayer", size=5)
+    g.map(sns.stripplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"]).add_legend()
+    g.map(sns.pointplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"], join=True).add_legend()
+    g.set(ylim=(-0.1, 1.0))
+    plt.savefig(join(figdir, f"{yval}_strip_by_layer-sublayer.png"))
+    plt.savefig(join(figdir, f"{yval}_strip_by_layer-sublayer.pdf"))
+    plt.show()
+#%%
+for yval in ["evol_test_D2", "D2", "rho_p"]: #
+    g = sns.FacetGrid(df_allcol, col="layer", size=5)
+    g.map(sns.stripplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"]).add_legend()
+    g.map(sns.pointplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"], join=True).add_legend()
+    g.set(ylim=(-0.1, 1.0))
+    plt.savefig(join(figdir, f"{yval}_strip_by_layer.png"))
+    plt.savefig(join(figdir, f"{yval}_strip_by_layer.pdf"))
+    plt.show()
+#%%
+for yval in ["evol_test_D2", "D2", "rho_p"]:  #
+    g = sns.FacetGrid(df_allcol, size=5)
+    g.map(sns.stripplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"]).add_legend()
+    g.map(sns.pointplot, "featred", yval, "regressor", alpha=0.6, palette="Set2", dodge=True,
+          order=["factor3","spmask3","featvec3","pca","srp"], join=True).add_legend()
+    g.set(ylim=(-0.1, 1.0))
+    plt.savefig(join(figdir, f"{yval}_strip_pooled.png"))
+    plt.savefig(join(figdir, f"{yval}_strip_pooled.pdf"))
+    plt.show()
