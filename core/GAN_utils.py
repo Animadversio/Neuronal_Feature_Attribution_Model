@@ -42,12 +42,13 @@ model_urls = {"pool5" : "https://onedrive.live.com/download?cid=9CFFF6BCB39F6829
     "fc7": "https://onedrive.live.com/download?cid=9CFFF6BCB39F6829&resid=9CFFF6BCB39F6829%2145338&authkey=AJ0R-daUAVYjQIw",
     "fc8": "https://onedrive.live.com/download?cid=9CFFF6BCB39F6829&resid=9CFFF6BCB39F6829%2145340&authkey=AKIfNk7s5MGrRkU"}
 
+
 def load_statedict_from_online(name="fc6"):
-    torchhome = torch.hub._get_torch_home()
+    torchhome = torch.hub.get_dir()  # torch.hub._get_torch_home()
     ckpthome = join(torchhome, "checkpoints")
     os.makedirs(ckpthome, exist_ok=True)
     filepath = join(ckpthome, "upconvGAN_%s.pt"%name)
-    if os.path.exists(filepath):
+    if not os.path.exists(filepath):
         torch.hub.download_url_to_file(model_urls[name], filepath, hash_prefix=None,
                                    progress=True)
     SD = torch.load(filepath)
@@ -173,6 +174,46 @@ class upconvGAN(nn.Module):
     def visualize(self, x, scale=1.0):
         raw = self.G(x)[:, [2, 1, 0], :, :]
         return torch.clamp(raw + RGB_mean.to(raw.device), 0, 255.0) / 255.0 * scale
+
+    def visualize_batch(self, x_arr, scale=1.0, B=42, ):
+        coden = x_arr.shape[0]
+        img_all = []
+        csr = 0  # if really want efficiency, we should use minibatch processing.
+        with torch.no_grad():
+            while csr < coden:
+                csr_end = min(csr + B, coden)
+                imgs = self.visualize(x_arr[csr:csr_end, :].cuda(), scale).cpu()
+                img_all.append(imgs)
+                csr = csr_end
+        img_all = torch.cat(img_all, dim=0)
+        return img_all
+
+    def render(self, x, scale=1.0, B=42):  # add batch processing to avoid memory over flow for batch too large
+        coden = x.shape[0]
+        img_all = []
+        csr = 0  # if really want efficiency, we should use minibatch processing.
+        while csr < coden:
+            csr_end = min(csr + B, coden)
+            with torch.no_grad():
+                imgs = self.visualize(torch.from_numpy(x[csr:csr_end, :]).float().cuda(), scale).permute(2,3,1,0).cpu().numpy()
+            img_all.extend([imgs[:, :, :, imgi] for imgi in range(imgs.shape[3])])
+            csr = csr_end
+        return img_all
+
+    def visualize_batch_np(self, codes_all_arr, scale=1.0, B=42, verbose=False):
+        coden = codes_all_arr.shape[0]
+        img_all = None
+        csr = 0  # if really want efficiency, we should use minibatch processing.
+        with torch.no_grad():
+            while csr < coden:
+                csr_end = min(csr + B, coden)
+                imgs = self.visualize(torch.from_numpy(codes_all_arr[csr:csr_end, :]).float().cuda(), scale).cpu()
+                img_all = imgs if img_all is None else torch.cat((img_all, imgs), dim=0)
+                csr = csr_end
+                if verbose:
+                    clear_output(wait=True)
+                    progress_bar(csr_end, coden, "ploting row of page: %d of %d" % (csr_end, coden))
+        return img_all
 
 
 class multiZupconvGAN(nn.Module):
