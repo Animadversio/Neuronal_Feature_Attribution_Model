@@ -3,6 +3,8 @@ With the same base network, train K readout networks on top of it.
 Study the ensemble performance.
 """
 import os
+
+import matplotlib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -101,13 +103,15 @@ class ModelTrainer:
                        join(self.trial_dir, "model_best_info.pt"))
             print("best model saved")
 
-Animal = "Alfa"
+Animal = "Beto"
 MStats = loadmat(join(mat_path, Animal + "_Manif_stats.mat"), struct_as_record=False, squeeze_me=True)['Stats']
 EStats = loadmat(join(mat_path, Animal + "_Evol_stats.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['EStats']
 ReprStats = loadmat(join(mat_path, Animal + "_ImageRepr.mat"), struct_as_record=False, squeeze_me=True, chars_as_strings=True)['ReprStats']
 
+import matplotlib
+matplotlib.use('Agg')
 #%%
-for Expi in range(11, len(MStats)+1):
+for Expi in range(34, len(MStats)+1):
     # load the image paths and the response vector
     expdir = join(saveroot, f"{Animal}_{Expi:02d}")
 
