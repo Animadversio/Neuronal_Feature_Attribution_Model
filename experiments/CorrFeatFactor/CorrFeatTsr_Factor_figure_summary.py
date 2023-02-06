@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, multichan2rgb, saveallforms
 from core.neural_data_loader import mat_path, loadmat
-from core.featvis_lib import rectify_tsr
+from core.CorrFeatFactor.featvis_lib import rectify_tsr
 from core.CNN_scorers import load_featnet
 from core.plot_utils import showimg, off_axes
 #%
@@ -268,7 +268,7 @@ for Animal, Expi in Explist[:]:
 
 #%% Supplementary Figure S4O
 from core.GAN_utils import upconvGAN
-from core.featvis_lib import vis_feattsr, vis_feattsr_factor, vis_featvec_wmaps
+from core.CorrFeatFactor.featvis_lib import vis_feattsr, vis_feattsr_factor, vis_featvec_wmaps
 from core.CorrFeatFactor.CorrFeatTsr_predict_lib import visualize_fulltsrModel, visualize_factorModel
 G = upconvGAN("fc6").cuda()
 G.requires_grad_(False)

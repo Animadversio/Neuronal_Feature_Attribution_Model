@@ -24,7 +24,7 @@ from core.GAN_utils import upconvGAN
 from core.CNN_scorers import TorchScorer, load_featnet
 from core.Optimizers import CholeskyCMAES
 from core.layer_hook_utils import featureFetcher
-from core.featvis_lib import tsr_posneg_factorize
+from core.CorrFeatFactor.featvis_lib import tsr_posneg_factorize
 from core.dataset_utils import create_imagenet_valid_dataset, DataLoader, Subset
 from core.neural_regress.regress_lib import calc_reduce_features_dataset,\
     evaluate_prediction, sweep_regressors, Ridge, Lasso

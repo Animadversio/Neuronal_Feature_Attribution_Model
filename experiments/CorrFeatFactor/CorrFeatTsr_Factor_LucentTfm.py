@@ -3,7 +3,7 @@ import pickle as pkl
 from os.path import join
 from core.CNN_scorers import load_featnet
 from core.GAN_utils import upconvGAN
-from core.featvis_lib import vis_feattsr_factor
+from core.CorrFeatFactor.featvis_lib import vis_feattsr_factor
 from lucent.optvis.transform import random_rotate, jitter
 
 G = upconvGAN().cuda().eval()

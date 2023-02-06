@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 
 from core.plot_utils import saveallforms
-from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.CorrFeatFactor.featvis_lib import tsr_posneg_factorize, rectify_tsr
 
 
 def load_covtsrs(Animal, Expi, layer, ):

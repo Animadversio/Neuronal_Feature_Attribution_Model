@@ -19,7 +19,7 @@ from core.CorrFeatFactor.CorrFeatTsr_utils import area_mapping, add_suffix, merg
 from core.GAN_utils import upconvGAN
 from core.CNN_scorers import load_featnet
 from core.neural_data_loader import mat_path, loadmat, load_score_mat
-from core.featvis_lib import rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
+from core.CorrFeatFactor.featvis_lib import rectify_tsr, tsr_factorize, tsr_posneg_factorize, vis_feattsr, vis_featvec, \
     vis_feattsr_factor, vis_featvec_point, vis_featvec_wmaps, \
     CorrFeatScore, show_img, pad_factor_prod
 

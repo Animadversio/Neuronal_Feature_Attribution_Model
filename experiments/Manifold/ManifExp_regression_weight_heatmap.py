@@ -12,7 +12,7 @@ import torch
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import GridSearchCV
 import seaborn as sns
-from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.CorrFeatFactor.featvis_lib import tsr_posneg_factorize, rectify_tsr
 from core.neural_regress.sklearn_torchify_lib import SRP_torch, PCA_torch, \
     LinearRegression_torch, PLS_torch, SpatialAvg_torch
 mpl.rcParams['pdf.fonttype'] = 42

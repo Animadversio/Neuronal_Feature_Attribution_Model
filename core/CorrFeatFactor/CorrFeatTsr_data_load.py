@@ -1,6 +1,6 @@
 import numpy as np
 from os.path import join
-from core.featvis_lib import tsr_posneg_factorize, rectify_tsr
+from core.CorrFeatFactor.featvis_lib import tsr_posneg_factorize, rectify_tsr
 
 dataroot = r"E:\Network_Data_Sync\corrFeatTsr"
 

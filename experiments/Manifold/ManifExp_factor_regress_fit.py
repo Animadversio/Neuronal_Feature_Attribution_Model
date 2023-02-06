@@ -20,7 +20,7 @@ import pickle as pkl
 from scipy.stats import spearmanr, pearsonr
 from core.CNN_scorers import load_featnet
 from core.neural_data_loader import load_score_mat
-from core.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
+from core.CorrFeatFactor.featvis_lib import CorrFeatScore, tsr_posneg_factorize, rectify_tsr, pad_factor_prod
 from core.CorrFeatFactor.CorrFeatTsr_predict_lib import fitnl_predscore, score_images, loadimg_preprocess, predict_fit_dataset, score_images_torchdata
 #%%
 def load_covtsrs(Animal, Expi, layer, ):
