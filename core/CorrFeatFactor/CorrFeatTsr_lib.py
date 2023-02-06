@@ -91,6 +91,8 @@ class Corr_Feat_Machine:
         return activ_hook
 
     def register_hooks(self, net, layers, netname="vgg16", verbose=True):
+        """A simple interface to register hooks, use net and layers (list of str) to register hooks
+        """
         if isinstance(layers, str):
             layers = [layers]
 
@@ -105,6 +107,15 @@ class Corr_Feat_Machine:
             actH = targmodule.register_forward_hook(self.hook_forger(layer, verbose=verbose))
             self.hooks.append(actH)
             self.layers.append(layer)
+
+    def register_module_hooks(self, module_dict: dict, verbose=True):
+        """An alternative way to register hooks, given a dictionary of modules
+        Keys are strs, values are torch modules
+        """
+        for key, targmodule in module_dict.items():
+            actH = targmodule.register_forward_hook(self.hook_forger(key, verbose=verbose))
+            self.hooks.append(actH)
+            self.layers.append(key)
 
     def init_corr(self):
         self.feat_tsr = {}
@@ -178,15 +189,22 @@ class Corr_Feat_Machine:
         """
         savedict = EasyDict()
         savedict.imgN = self.imgN
-        savedict.cctsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.cctsr.items()}
-        savedict.Ttsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.Ttsr.items()}
-        savedict.featM = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featM.items()}
-        savedict.featStd = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featStd.items()}
+        if numpy:
+            savedict.cctsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.cctsr.items()}
+            savedict.Ttsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.Ttsr.items()}
+            savedict.featM = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featM.items()}
+            savedict.featStd = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featStd.items()}
+        else:
+            savedict.cctsr = {layer: tsr.clone().cpu() for layer, tsr in self.cctsr.items()}
+            savedict.Ttsr = {layer: tsr.clone().cpu() for layer, tsr in self.Ttsr.items()}
+            savedict.featM = {layer: tsr.clone().cpu() for layer, tsr in self.featM.items()}
+            savedict.featStd = {layer: tsr.clone().cpu() for layer, tsr in self.featStd.items()}
         return savedict
 
     def clear_hook(self):
         for h in self.hooks:
             h.remove()
+        print('All hooks removed')
 
     def __del__(self):
         self.clear_hook()
