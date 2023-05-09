@@ -131,6 +131,7 @@ class Corr_Feat_Machine:
         self.featM = defaultdict(lambda: None)
         self.featStd = defaultdict(lambda: None)
         self.cctsr = defaultdict(lambda: None)
+        self.covtsr = defaultdict(lambda: None)
         self.Ttsr = defaultdict(lambda: None)
         self.imgN = 0
 
@@ -177,8 +178,8 @@ class Corr_Feat_Machine:
             self.featMSq[layer] = self.featSSq[layer] / self.imgN
             self.innerProd_M[layer] = self.innerProd[layer] / self.imgN
             self.featStd[layer] = (self.featMSq[layer] - self.featM[layer] ** 2).sqrt()
-            self.cctsr[layer] = (self.innerProd_M[layer] - self.scoreM * self.featM[layer]) / self.featStd[
-                layer] / self.scoreStd
+            self.covtsr[layer] = (self.innerProd_M[layer] - self.scoreM * self.featM[layer]) / self.scoreStd
+            self.cctsr[layer] = self.covtsr[layer] / self.featStd[layer] # modified May 8th, 2023
             self.Ttsr[layer] = np.sqrt(self.imgN - 2) * self.cctsr[layer] / (1 - self.cctsr[layer] ** 2).sqrt()
 
     def make_savedict(self, numpy=True):
@@ -191,11 +192,13 @@ class Corr_Feat_Machine:
         savedict.imgN = self.imgN
         if numpy:
             savedict.cctsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.cctsr.items()}
+            savedict.covtsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.covtsr.items()}
             savedict.Ttsr = {layer: tsr.cpu().data.numpy() for layer, tsr in self.Ttsr.items()}
             savedict.featM = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featM.items()}
             savedict.featStd = {layer: tsr.cpu().data.numpy() for layer, tsr in self.featStd.items()}
         else:
             savedict.cctsr = {layer: tsr.clone().cpu() for layer, tsr in self.cctsr.items()}
+            savedict.covtsr = {layer: tsr.clone().cpu() for layer, tsr in self.covtsr.items()}
             savedict.Ttsr = {layer: tsr.clone().cpu() for layer, tsr in self.Ttsr.items()}
             savedict.featM = {layer: tsr.clone().cpu() for layer, tsr in self.featM.items()}
             savedict.featStd = {layer: tsr.clone().cpu() for layer, tsr in self.featStd.items()}
