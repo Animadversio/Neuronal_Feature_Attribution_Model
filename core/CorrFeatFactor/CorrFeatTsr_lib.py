@@ -18,7 +18,14 @@ import numpy as np
 import torch
 from easydict import EasyDict
 from skimage.filters import gaussian
-from skimage.transform import resize
+try:
+    from skimage.transform import resize, rescale
+except:
+    print("Warning: skimage.transform is not available. Will use scipy.misc.imresize instead.")
+    from PIL import Image
+    def resize(img, size):
+        return np.array(Image.fromarray(img).resize(size, Image.Resampling(2)))
+
 from tqdm import tqdm
 
 #  New name array to match that of matlab
