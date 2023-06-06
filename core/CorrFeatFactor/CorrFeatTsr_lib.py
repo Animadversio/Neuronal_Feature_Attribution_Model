@@ -143,6 +143,7 @@ class Corr_Feat_Machine:
         self.imgN = 0
 
     def update_corr(self, score_tsr):
+        assert len(score_tsr.shape) == 1
         self.imgN += score_tsr.shape[0]
         self.scoreS = score_tsr.sum(0) if self.scoreS is None else self.scoreS + score_tsr.sum(0)
         self.scoreSSq = (score_tsr ** 2).sum(0) if self.scoreSSq is None else self.scoreSSq + (score_tsr ** 2).sum(0)
@@ -152,6 +153,20 @@ class Corr_Feat_Machine:
             featSSq_tmp = (part_tsr ** 2).sum(dim=0)
             self.innerProd[layer] = innerProd_tmp if self.innerProd[layer] is None else innerProd_tmp \
                                                                                         + self.innerProd[layer]
+            self.featS[layer] = featS_tmp if self.featS[layer] is None else featS_tmp + self.featS[layer]
+            self.featSSq[layer] = featSSq_tmp if self.featSSq[layer] is None else featSSq_tmp + self.featSSq[layer]
+
+    def update_corr_multi(self, score_tsr):
+        assert len(score_tsr.shape) == 2
+        self.imgN += score_tsr.shape[0]
+        self.scoreS = score_tsr.sum(0) if self.scoreS is None else self.scoreS + score_tsr.sum(0)
+        self.scoreSSq = (score_tsr ** 2).sum(0) if self.scoreSSq is None else self.scoreSSq + (score_tsr ** 2).sum(0)
+        for layer, part_tsr in self.feat_tsr.items():
+            innerProd_tmp = torch.einsum("iT,ijkl->Tjkl", score_tsr, part_tsr, )  # [time by features]
+            featS_tmp = part_tsr.sum(dim=0)
+            featSSq_tmp = (part_tsr ** 2).sum(dim=0)
+            self.innerProd[layer] = innerProd_tmp if self.innerProd[layer] is None \
+                                    else innerProd_tmp + self.innerProd[layer]
             self.featS[layer] = featS_tmp if self.featS[layer] is None else featS_tmp + self.featS[layer]
             self.featSSq[layer] = featSSq_tmp if self.featSSq[layer] is None else featSSq_tmp + self.featSSq[layer]
 
@@ -174,6 +189,22 @@ class Corr_Feat_Machine:
                                                                                         + self.innerProd[layer]
             self.featS[layer] = featS_tmp if self.featS[layer] is None else featS_tmp + self.featS[layer]
             self.featSSq[layer] = featSSq_tmp if self.featSSq[layer] is None else featSSq_tmp + self.featSSq[layer]
+
+    def calc_corr_multi(self, ):
+        self.scoreM = self.scoreS / self.imgN # mean of score, [T,] tensor
+        scorMSq = self.scoreSSq / self.imgN
+        self.scoreStd = (scorMSq - self.scoreM ** 2).sqrt() # std of score, [T,] tensor
+        for layer in self.layers:
+            self.featM[layer] = self.featS[layer] / self.imgN # mean of feature, [C,H,W] tensor
+            self.featMSq[layer] = self.featSSq[layer] / self.imgN # mean of feature square, [C,H,W] tensor
+            self.featStd[layer] = (self.featMSq[layer] - self.featM[layer] ** 2).sqrt() # std of feature, [C,H,W] tensor
+            self.innerProd_M[layer] = self.innerProd[layer] / self.imgN # mean of inner product, [T,C,H,W] tensor
+            # self.covtsr[layer] = (self.innerProd_M[layer] - self.scoreM * self.featM[layer]) / self.scoreStd
+            self.covtsr[layer] = (self.innerProd_M[layer] -
+                                  self.scoreM[:, None, None, None] * self.featM[layer][None, :, :, :]
+                                 ) / self.scoreStd[:, None, None, None]
+            self.cctsr[layer] = self.covtsr[layer] / self.featStd[layer][None, :, :, :] # modified May 8th, 2023
+            self.Ttsr[layer] = np.sqrt(self.imgN - 2) * self.cctsr[layer] / (1 - self.cctsr[layer] ** 2).sqrt()
 
     def calc_corr(self, ):
         self.scoreM = self.scoreS / self.imgN
